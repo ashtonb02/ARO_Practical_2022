@@ -1,3 +1,5 @@
+from logging import raiseExceptions
+from ntpath import join
 from scipy.spatial.transform import Rotation as npRotation
 from scipy.special import comb
 from scipy.interpolate import CubicSpline
@@ -10,8 +12,7 @@ import yaml
 
 from Pybullet_Simulation_base import Simulation_base
 
-# TODO: Rename class name after copying this file
-class Simulation_template(Simulation_base):
+class Simulation(Simulation_base):
     """A Bullet simulation involving Nextage robot"""
 
     def __init__(self, pybulletConfigs, robotConfigs, refVect=None):
@@ -30,47 +31,45 @@ class Simulation_template(Simulation_base):
     jointRotationAxis = {
         'base_to_dummy': np.zeros(3),  # Virtual joint
         'base_to_waist': np.zeros(3),  # Fixed joint
-        # TODO: modify from here
-        'CHEST_JOINT0': np.array([0, 0, 0]),
-        'HEAD_JOINT0': np.array([0, 0, 0]),
-        'HEAD_JOINT1': np.array([0, 0, 0]),
-        'LARM_JOINT0': np.array([0, 0, 0]),
-        'LARM_JOINT1': np.array([0, 0, 0]),
-        'LARM_JOINT2': np.array([0, 0, 0]),
-        'LARM_JOINT3': np.array([0, 0, 0]),
-        'LARM_JOINT4': np.array([0, 0, 0]),
-        'LARM_JOINT5': np.array([0, 0, 0]),
-        'RARM_JOINT0': np.array([0, 0, 0]),
-        'RARM_JOINT1': np.array([0, 0, 0]),
-        'RARM_JOINT2': np.array([0, 0, 0]),
-        'RARM_JOINT3': np.array([0, 0, 0]),
-        'RARM_JOINT4': np.array([0, 0, 0]),
-        'RARM_JOINT5': np.array([0, 0, 0]),
-        'RHAND'      : np.array([0, 0, 0]),
-        'LHAND'      : np.array([0, 0, 0])
+        'CHEST_JOINT0': np.array([0, 0, 1]),
+        'HEAD_JOINT0': np.array([0, 0, 1]),
+        'HEAD_JOINT1': np.array([0, 1, 0]),
+        'LARM_JOINT0': np.array([0, 0, 1]),
+        'LARM_JOINT1': np.array([0, 1, 0]),
+        'LARM_JOINT2': np.array([0, 1, 0]),
+        'LARM_JOINT3': np.array([1, 0, 0]),
+        'LARM_JOINT4': np.array([0, 1, 0]),
+        'LARM_JOINT5': np.array([0, 0, 1]),
+        'RARM_JOINT0': np.array([0, 0, 1]),
+        'RARM_JOINT1': np.array([0, 1, 0]),
+        'RARM_JOINT2': np.array([0, 1, 0]),
+        'RARM_JOINT3': np.array([1, 0, 0]),
+        'RARM_JOINT4': np.array([0, 1, 0]),
+        'RARM_JOINT5': np.array([0, 0, 1]),
+        'RHAND'      : np.array([0, 0, 1]),
+        'LHAND'      : np.array([0, 0, 1])
     }
 
     frameTranslationFromParent = {
         'base_to_dummy': np.zeros(3),  # Virtual joint
         'base_to_waist': np.zeros(3),  # Fixed joint
-        # TODO: modify from here
-        'CHEST_JOINT0': np.array([0, 0, 0]),
-        'HEAD_JOINT0': np.array([0, 0, 0]),
-        'HEAD_JOINT1': np.array([0, 0, 0]),
-        'LARM_JOINT0': np.array([0, 0, 0]),
-        'LARM_JOINT1': np.array([0, 0, 0]),
-        'LARM_JOINT2': np.array([0, 0, 0]),
-        'LARM_JOINT3': np.array([0, 0, 0]),
-        'LARM_JOINT4': np.array([0, 0, 0]),
-        'LARM_JOINT5': np.array([0, 0, 0]),
-        'RARM_JOINT0': np.array([0, 0, 0]),
-        'RARM_JOINT1': np.array([0, 0, 0]),
-        'RARM_JOINT2': np.array([0, 0, 0]),
-        'RARM_JOINT3': np.array([0, 0, 0]),
-        'RARM_JOINT4': np.array([0, 0, 0]),
-        'RARM_JOINT5': np.array([0, 0, 0]),
-        'RHAND'      : np.array([0, 0, 0]), # optional
-        'LHAND'      : np.array([0, 0, 0]) # optional
+        'CHEST_JOINT0': np.array([[1,0,0,0],[0,1,0,0],[0,0,1,0.267],[0,0,0,1]]),
+        'HEAD_JOINT0': np.array([[1,0,0,0],[0,1,0,0],[0,0,1,0.302],[0,0,0,1]]),
+        'HEAD_JOINT1': np.array([[1,0,0,0],[0,1,0,0],[0,0,1,0.066],[0,0,0,1]]),
+        'LARM_JOINT0': np.array([[1,0,0,0.04],[0,1,0,0.135],[0,0,1,0.1015],[0,0,0,1]]),
+        'LARM_JOINT1': np.array([[1,0,0,0],[0,1,0,0],[0,0,1,0.066],[0,0,0,1]]),
+        'LARM_JOINT2': np.array([[1,0,0,0],[0,1,0,0.095],[0,0,1,-0.25],[0,0,0,1]]),
+        'LARM_JOINT3': np.array([[1,0,0,0.1805],[0,1,0,0],[0,0,1,-0.03],[0,0,0,1]]),
+        'LARM_JOINT4': np.array([[1,0,0,0.1495],[0,1,0,0],[0,0,1,0],[0,0,0,1]]),
+        'LARM_JOINT5': np.array([[1,0,0,0],[0,1,0,0],[0,0,1,-0.1335],[0,0,0,1]]),
+        'RARM_JOINT0': np.array([[1,0,0,0.04],[0,1,0,-0.135],[0,0,1,0.1015],[0,0,0,1]]),
+        'RARM_JOINT1': np.array([[1,0,0,0],[0,1,0,0],[0,0,1,0.066],[0,0,0,1]]),
+        'RARM_JOINT2': np.array([[1,0,0,0],[0,1,0,-0.095],[0,0,1,-0.25],[0,0,0,1]]),
+        'RARM_JOINT3': np.array([[1,0,0,0.1805],[0,1,0,0],[0,0,1,-0.03],[0,0,0,1]]),
+        'RARM_JOINT4': np.array([[1,0,0,0.1495],[0,1,0,0],[0,0,1,0],[0,0,0,1]]),
+        'RARM_JOINT5': np.array([[1,0,0,0],[0,1,0,0],[0,0,1,-0.1335],[0,0,0,1]]),
+        'RHAND'      : np.array([[1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,1]]), # optional
+        'LHAND'      : np.array([[1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,1]]) # optional
     }
 
     def getJointRotationalMatrix(self, jointName=None, theta=None):
@@ -81,10 +80,36 @@ class Simulation_template(Simulation_base):
         if jointName == None:
             raise Exception("[getJointRotationalMatrix] \
                 Must provide a joint in order to compute the rotational matrix!")
-        # TODO modify from here
+        # COMPLETE
         # Hint: the output should be a 3x3 rotational matrix as a numpy array
         #return np.matrix()
-        pass
+
+        #define rotaion matrices for rotation around x, y, & z
+        rotation_x = np.matrix([[1,0,0],[0, (np.cos(theta)), -(np.sin(theta))], [0, (np.sin(theta)), (np.cos(theta))]])
+        rotation_y = np.matrix([[(np.cos(theta)), 0, (np.sin(theta))], [0,1,0], [-(np.sin(theta)), 0, (np.cos(theta))]])
+        rotation_z = np.matrix([[np.cos(theta),-np.sin(theta),0],[np.sin(theta), np.cos(theta),0],[0,0,1]])
+        
+        #instantiate zero rotation matrix to replace
+        joint_rotational_matrix = np.matrix([[0,0,0],[0,0,0],[0,0,0]])
+
+        # if axis of rotation is x, use x rotation matrix
+        if (self.jointRotationAxis[jointName])[0] == 1:
+            joint_rotational_matrix = rotation_x
+
+        # if axis of rotation is y, use y rotation matrix
+        elif (self.jointRotationAxis[jointName])[1] == 1:
+            joint_rotational_matrix = rotation_y
+
+        # if axis of rotation is z, use z rotation matrix
+        elif (self.jointRotationAxis[jointName])[2] == 1:
+            joint_rotational_matrix = rotation_z
+
+        else:
+            raise Exception("[getJointRotationalMatrix] \
+                Joint rotation axis is an invalid format.")   
+
+        return joint_rotational_matrix
+        
 
     def getTransformationMatrices(self):
         """
@@ -94,6 +119,24 @@ class Simulation_template(Simulation_base):
         # TODO modify from here
         # Hint: the output should be a dictionary with joint names as keys and
         # their corresponding homogeneous transformation matrices as values.
+
+        for i in self.jointRotationAxis:
+            rotation_matrix = self.getJointRotationalMatrix(i, theta=0)
+            whole_position_matrix = self.frameTranslationFromParent[i]
+            required_position_matrix = []
+            
+            for n in range(0,2):
+                required_position_matrix.append(whole_position_matrix[n][3])
+
+            np.transpose(np.asarray(required_position_matrix))
+
+            tranform_no_padding = np.concatenate(rotation_matrix, required_position_matrix, axis=1)
+            padding = np.array([0,0,0,1])
+
+            transformation_matrix = np.concatenate(tranform_no_padding, padding)
+
+            transformationMatrices.update({i: transformation_matrix})
+
         return transformationMatrices
 
     def getJointLocationAndOrientation(self, jointName):
