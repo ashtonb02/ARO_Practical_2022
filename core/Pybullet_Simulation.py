@@ -1,5 +1,6 @@
 from logging import raiseExceptions
 from ntpath import join
+from turtle import position
 from scipy.spatial.transform import Rotation as npRotation
 from scipy.special import comb
 from scipy.interpolate import CubicSpline
@@ -120,9 +121,9 @@ class Simulation(Simulation_base):
         # Hint: the output should be a dictionary with joint names as keys and
         # their corresponding homogeneous transformation matrices as values.
 
-        for i in self.jointRotationAxis:
-            rotation_matrix = self.getJointRotationalMatrix(i, theta=0)
-            whole_position_matrix = self.frameTranslationFromParent[i]
+        for jointName in self.jointRotationAxis:
+            rotation_matrix = self.getJointRotationalMatrix(jointName, theta=0)
+            whole_position_matrix = self.frameTranslationFromParent[jointName]
             required_position_matrix = []
             
             for n in range(0,2):
@@ -135,7 +136,7 @@ class Simulation(Simulation_base):
 
             transformation_matrix = np.concatenate(tranform_no_padding, padding)
 
-            transformationMatrices.update({i: transformation_matrix})
+            transformationMatrices.update({jointName: transformation_matrix})
 
         return transformationMatrices
 
@@ -145,11 +146,18 @@ class Simulation(Simulation_base):
             according to the topology of the Nextage robot.
         """
         # Remember to multiply the transformation matrices following the kinematic chain for each arm.
-        #TODO modify from here
+        # COMPLETE modify from here
         # Hint: return two numpy arrays, a 3x1 array for the position vector,
         # and a 3x3 array for the rotation matrix
         #return pos, rotmat
-        pass
+
+        HTM = self.getTransformationMatrices()[jointName]
+        pos = np.array([[HTM[0][3]],[HTM[1][3]],[HTM[2][3]]])
+        rotmat = np.array([[HTM[0][0],HTM[0][1],HTM[0][2]],
+                           [HTM[1][0],HTM[1][1],HTM[1][2]],
+                           [HTM[2][0],HTM[2][1],HTM[2][2]]])
+
+        return pos, rotmat
 
     def getJointPosition(self, jointName):
         """Get the position of a joint in the world frame, leave this unchanged please."""
