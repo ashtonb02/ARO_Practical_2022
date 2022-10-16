@@ -117,7 +117,7 @@ class Simulation(Simulation_base):
             Returns the homogeneous transformation matrices for each joint as a dictionary of matrices.
         """
         transformationMatrices = {}
-        # TODO modify from here
+        # COMPLETE modify from here
         # Hint: the output should be a dictionary with joint names as keys and
         # their corresponding homogeneous transformation matrices as values.
 
@@ -183,7 +183,20 @@ class Simulation(Simulation_base):
         # a 3xn or a 6xn Jacobian matrix, where 'n' is the number of joints in
         # your kinematic chain.
         #return np.array()
-        pass
+
+        
+        if endEffector == "RHAND": keys = ['RARM_JOINT' + str(n) for n in range(0,6)]
+        elif endEffector == "LHAND": keys = ['LARM_JOINT' + str(n) for n in range(0,6)]
+
+        endEffPos3d = self.getJointPosition(endEffector)
+        a = np.array([self.jointRotationAxis.get(x) for x in keys])
+
+        J = []
+        for k in range(0,len(keys)):
+            col = endEffPos3d - np.array(self.getJointPosition(keys[k]) + [0])
+            J.append(np.cross(a[k], col[k]))
+
+        return np.array(J).T
 
     # Task 1.2 Inverse Kinematics
 
