@@ -185,16 +185,16 @@ class Simulation(Simulation_base):
         #return np.array()
 
         
-        if endEffector == "RHAND": keys = ['RARM_JOINT' + str(n) for n in range(0,6)]
-        elif endEffector == "LHAND": keys = ['LARM_JOINT' + str(n) for n in range(0,6)]
+        if endEffector == 'RHAND': keys = ['CHEST_JOINT0'] + ['RARM_JOINT' + str(n) for n in range(0,6)]
+        elif endEffector == 'LHAND': keys = ['CHEST_JOINT0'] + ['LARM_JOINT' + str(n) for n in range(0,6)]
 
-        endEffPos3d = self.getJointPosition(endEffector)
-        a = np.array([self.jointRotationAxis.get(x) for x in keys])
+        endEffPos = self.getJointPosition(endEffector)
+        axes = np.array([self.jointRotationAxis.get(x) for x in keys])
 
         J = []
         for k in range(0,len(keys)):
-            col = endEffPos3d - np.array(self.getJointPosition(keys[k]) + [0])
-            J.append(np.cross(a[k], col[k]))
+            col = endEffPos - np.array(self.getJointPosition(keys[k]) + [0])
+            J.append(np.cross(axes[k], col[k]))
 
         return np.array(J).T
 
@@ -216,7 +216,19 @@ class Simulation(Simulation_base):
         # TODO add your code here
         # Hint: return a numpy array which includes the reference angular
         # positions for all joints after performing inverse kinematics.
-        pass
+
+        if endEffector == 'RHAND': keys = ['CHEST_JOINT0'] + ['RARM_JOINT' + str(n) for n in range(0,6)]
+        elif endEffector == 'LHAND': keys = ['CHEST_JOINT0'] + ['LARM_JOINT' + str(n) for n in range(0,6)]
+
+        delta_Q = np.zeros(len(keys))
+
+        dp = np.linspace(self.getJointPosition(endEffector), targetPosition, interpolationSteps)
+
+        for n in interpolationSteps:
+            dq = np.linalg.pinv(self.jacobianMatrix(endEffector)) * dp
+            delta_Q += dq
+
+        return delta_Q
 
     def move_without_PD(self, endEffector, targetPosition, speed=0.01, orientation=None,
         threshold=1e-3, maxIter=3000, debug=False, verbose=False):
