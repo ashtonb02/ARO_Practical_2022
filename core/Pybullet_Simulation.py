@@ -176,7 +176,7 @@ class Simulation(Simulation_base):
 
     def jacobianMatrix(self, endEffector):
         """Calculate the Jacobian Matrix for the Nextage Robot."""
-        # TODO modify from here
+        # COMPLETE modify from here
         # You can implement the cross product yourself or use calculateJacobian().
         # Hint: you should return a numpy array for your Jacobian matrix. The
         # size of the matrix will depend on your chosen convention. You can have
@@ -184,21 +184,21 @@ class Simulation(Simulation_base):
         # your kinematic chain.
         #return np.array()
 
+        peff = self.getJointPosition(endEffector)
+        keys = ['CHEST_JOINT0'] 
+
+        if endEffector == 'RHAND': keys += ['RARM_JOINT' + str(n) for n in range(0,6)]
+        else: keys += ['LARM_JOINT' + str(n) for n in range(0,6)]
         
-        if endEffector == 'RHAND': keys = ['CHEST_JOINT0'] + ['RARM_JOINT' + str(n) for n in range(0,6)]
-        elif endEffector == 'LHAND': keys = ['CHEST_JOINT0'] + ['LARM_JOINT' + str(n) for n in range(0,6)]
+        # x y z
+        #( . . .) n joints downwards |
+        #( . . .)                    v
+        #( . . .) 
 
-        endEffPos = self.getJointPosition(endEffector)
-        axes = np.array([self.jointRotationAxis.get(x) for x in keys])
+        J = np.array([ (np.cross(self.getJointAxis(k).T, np.subtract(peff,self.getJointPosition(k)))).T for k in keys])
+        return J
 
-        J = []
-        for k in range(0,len(keys)):
-            col = endEffPos - np.array(self.getJointPosition(keys[k]) + [0])
-            J.append(np.cross(axes[k], col[k]))
-
-        return np.array(J).T
-
-    # Task 1.2 Inverse Kinematics
+    # Task 1.2 Inverse Kinematicse
 
     def inverseKinematics(self, endEffector, targetPosition, orientation, interpolationSteps, maxIterPerStep, threshold):
         """Your IK solver \\
@@ -216,19 +216,24 @@ class Simulation(Simulation_base):
         # TODO add your code here
         # Hint: return a numpy array which includes the reference angular
         # positions for all joints after performing inverse kinematics.
+        
+        start_pos = self.getJointPos(endEffector)
+        trajectory = np.linspace(targetPosition, start_pos, interpolationSteps)
 
-        if endEffector == 'RHAND': keys = ['CHEST_JOINT0'] + ['RARM_JOINT' + str(n) for n in range(0,6)]
-        elif endEffector == 'LHAND': keys = ['CHEST_JOINT0'] + ['LARM_JOINT' + str(n) for n in range(0,6)]
+        Theta = np.zeros(6) #how to generalise this line? 
 
-        delta_Q = np.zeros(len(keys))
+        for i in range(1,interpolationSteps):
+            for n in range(0, maxIterPerStep):
+                dy = trajectory[i] - trajectory[i-1]
+                jacobian = self.jacobianMatrix(endEffector)
+                dTheta = np.linalg.pinv(jacobian) * dy
+                Theta += dTheta
 
-        dp = np.linspace(self.getJointPosition(endEffector), targetPosition, interpolationSteps)
-
-        for n in interpolationSteps:
-            dq = np.linalg.pinv(self.jacobianMatrix(endEffector)) * dp
-            delta_Q += dq
-
-        return delta_Q
+                ef_pos = self.getJointLocationAndOrientation(endEffector)[0] #how to update the end effect position?
+                if np.abs(ef_pos - trajectory[i]) < threshold:
+                    break
+        
+        return Theta   
 
     def move_without_PD(self, endEffector, targetPosition, speed=0.01, orientation=None,
         threshold=1e-3, maxIter=3000, debug=False, verbose=False):
@@ -292,7 +297,7 @@ class Simulation(Simulation_base):
 
             ### Start your code here: ###
             # Calculate the torque with the above method you've made
-            torque = 0.0
+            torque = self.calculateTorque(x_ref, x_real, dx_ref, dx_real, integral, kp, ki, kd)
             ### To here ###
 
             pltTorque.append(torque)
