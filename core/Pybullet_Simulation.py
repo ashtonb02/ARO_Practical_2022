@@ -271,8 +271,9 @@ class Simulation(Simulation_base):
         Returns: \\
             u(t) - the manipulation signal
         """
-        # TODO: Add your code here
-        pass
+        # COMPLETE: Add your code here
+        u = kp*(x_ref - x_real) + kd*(dx_ref - dx_real) + ki*integral
+        return u
 
     # Task 2.2 Joint Manipulation
     def moveJoint(self, joint, targetPosition, targetVelocity, verbose=False):
