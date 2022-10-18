@@ -185,17 +185,19 @@ class Simulation(Simulation_base):
         #return np.array()
 
         peff = self.getJointPosition(endEffector)
-        keys = ['CHEST_JOINT0'] 
+        joints = ['CHEST_JOINT0'] 
 
-        if endEffector == 'RHAND': keys += ['RARM_JOINT' + str(n) for n in range(0,6)]
-        else: keys += ['LARM_JOINT' + str(n) for n in range(0,6)]
+        if endEffector == 'RHAND': joints += ['RARM_JOINT' + str(n) for n in range(0,6)]
+        else: joints += ['LARM_JOINT' + str(n) for n in range(0,6)]
         
         # x y z
         #( . . .) n joints downwards |
         #( . . .)                    v
-        #( . . .) 
+        #( . . .)
+        
+        #currently only correspodns to position and not orientation
 
-        J = np.array([ (np.cross(self.getJointAxis(k).T, np.subtract(peff,self.getJointPosition(k)))).T for k in keys])
+        J = np.array([ (np.cross(self.getJointAxis(k).T, np.subtract(peff,self.getJointPosition(k)))).T for k in joints])
         return J
 
     # Task 1.2 Inverse Kinematicse
@@ -217,20 +219,23 @@ class Simulation(Simulation_base):
         # Hint: return a numpy array which includes the reference angular
         # positions for all joints after performing inverse kinematics.
         
-        start_pos = self.getJointPos(endEffector)
-        trajectory = np.linspace(targetPosition, start_pos, interpolationSteps)
+        ef_pos = self.getJointPos(endEffector)
+        step_positions = np.linspace(ef_pos, targetPosition, interpolationSteps)
 
         Theta = np.zeros(6) #how to generalise this line? 
 
         for i in range(1,interpolationSteps):
+            curr_target = step_positions[i, :]
+            dstep = curr_target - ef_pos
             for n in range(0, maxIterPerStep):
-                dy = trajectory[i] - trajectory[i-1]
                 jacobian = self.jacobianMatrix(endEffector)
-                dTheta = np.linalg.pinv(jacobian) * dy
-                Theta += dTheta
+                
+                dtheta = np.linalg.pinv(jacobian) * dstep
 
-                ef_pos = self.getJointLocationAndOrientation(endEffector)[0] #how to update the end effect position?
-                if np.abs(ef_pos - trajectory[i]) < threshold:
+                Theta += dtheta
+                ef_pos += dstep
+                
+                if np.abs(ef_pos - curr_target) < threshold:
                     break
         
         return Theta   
@@ -245,6 +250,10 @@ class Simulation(Simulation_base):
         """
         #TODO add your code here
         # iterate through joints and update joint states based on IK solver
+        pltTime = np.zeros(1)
+        pltDistance = np.zeros(3)
+
+        
 
         #return pltTime, pltDistance
         pass
