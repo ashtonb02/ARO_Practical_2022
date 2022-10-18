@@ -86,30 +86,30 @@ class Simulation(Simulation_base):
         #return np.matrix()
 
         #define rotaion matrices for rotation around x, y, & z
-        rotation_x = np.matrix([[1,0,0],[0, (np.cos(theta)), -(np.sin(theta))], [0, (np.sin(theta)), (np.cos(theta))]])
-        rotation_y = np.matrix([[(np.cos(theta)), 0, (np.sin(theta))], [0,1,0], [-(np.sin(theta)), 0, (np.cos(theta))]])
-        rotation_z = np.matrix([[np.cos(theta),-np.sin(theta),0],[np.sin(theta), np.cos(theta),0],[0,0,1]])
+        rx = np.matrix([[1,0,0],[0, (np.cos(theta)), -(np.sin(theta))], [0, (np.sin(theta)), (np.cos(theta))]])
+        ry = np.matrix([[(np.cos(theta)), 0, (np.sin(theta))], [0,1,0], [-(np.sin(theta)), 0, (np.cos(theta))]])
+        rz = np.matrix([[np.cos(theta),-np.sin(theta),0],[np.sin(theta), np.cos(theta),0],[0,0,1]])
         
         #instantiate zero rotation matrix to replace
-        joint_rotational_matrix = np.matrix([[0,0,0],[0,0,0],[0,0,0]])
+        j_rotmat = np.matrix([[0,0,0],[0,0,0],[0,0,0]])
 
         # if axis of rotation is x, use x rotation matrix
         if (self.jointRotationAxis[jointName])[0] == 1:
-            joint_rotational_matrix = rotation_x
+            j_rotmat = rx
 
         # if axis of rotation is y, use y rotation matrix
         elif (self.jointRotationAxis[jointName])[1] == 1:
-            joint_rotational_matrix = rotation_y
+            j_rotmat = ry
 
         # if axis of rotation is z, use z rotation matrix
         elif (self.jointRotationAxis[jointName])[2] == 1:
-            joint_rotational_matrix = rotation_z
+            j_rotmat = rz
 
         else:
             raise Exception("[getJointRotationalMatrix] \
                 Joint rotation axis is an invalid format.")   
 
-        return joint_rotational_matrix
+        return j_rotmat
         
 
     def getTransformationMatrices(self):
@@ -184,6 +184,8 @@ class Simulation(Simulation_base):
         # your kinematic chain.
         #return np.array()
 
+        # default end effector is Left arm
+
         peff = self.getJointPosition(endEffector)
         keys = ['CHEST_JOINT0'] 
 
@@ -222,14 +224,17 @@ class Simulation(Simulation_base):
 
         Theta = np.zeros(6) #how to generalise this line? 
 
-        for i in range(1,interpolationSteps):
+        for i in range(1,interpolationSteps+1):
             for n in range(0, maxIterPerStep):
                 dy = trajectory[i] - trajectory[i-1]
                 jacobian = self.jacobianMatrix(endEffector)
                 dTheta = np.linalg.pinv(jacobian) * dy
                 Theta += dTheta
 
-                ef_pos = self.getJointLocationAndOrientation(endEffector)[0] #how to update the end effect position?
+                #update angles and end effector position?
+                #update orientation, what is variable used for?
+
+                ef_pos = self.getJointLocationAndOrientation(endEffector)[0] #how to update the end effector position?
                 if np.abs(ef_pos - trajectory[i]) < threshold:
                     break
         
