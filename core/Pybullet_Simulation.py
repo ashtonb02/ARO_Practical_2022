@@ -226,30 +226,18 @@ class Simulation(Simulation_base):
 
         Theta = np.zeros(6) #how to generalise this line? 
 
-<<<<<<< HEAD
         for i in range(1,interpolationSteps):
             curr_target = step_positions[i, :]
             dstep = curr_target - ef_pos
-=======
-        for i in range(1,interpolationSteps+1):
->>>>>>> 696c82595a55d9e6db32ff2f87f64c360ef51054
             for n in range(0, maxIterPerStep):
                 jacobian = self.jacobianMatrix(endEffector)
                 
                 dtheta = np.linalg.pinv(jacobian) * dstep
 
-<<<<<<< HEAD
                 Theta += dtheta
                 ef_pos += dstep
                 
                 if np.abs(ef_pos - curr_target) < threshold:
-=======
-                #update angles and end effector position?
-                #update orientation, what is variable used for?
-
-                ef_pos = self.getJointLocationAndOrientation(endEffector)[0] #how to update the end effector position?
-                if np.abs(ef_pos - trajectory[i]) < threshold:
->>>>>>> 696c82595a55d9e6db32ff2f87f64c360ef51054
                     break
         
         return Theta   
