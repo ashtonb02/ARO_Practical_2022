@@ -151,7 +151,19 @@ class Simulation(Simulation_base):
         # and a 3x3 array for the rotation matrix
         #return pos, rotmat
 
-        HTM = self.getTransformationMatrices()[jointName]
+        path = list()
+        
+        if jointName[0] == "R": path += ["RARM_JOINT"+str(n) for n in range(0,6)]
+        elif jointName[0] == "L": path += ["LARM_JOINT"+str(n) for n in range(0,6)]
+        elif jointName[0] == "H": path += ["HEAD_JOINT"+str(n) for n in range(0,2)]
+
+        HTM = self.getTransformationMatrices()["CHEST_JOINT0"]
+
+        if jointName != "CHEST_JOINT0":
+            for joint in path:
+                HTM *= self.getTransformationMatrices()[joint] 
+                if joint == jointName: break
+
         pos = np.array([[HTM[0][3]],[HTM[1][3]],[HTM[2][3]]])
         rotmat = np.array([[HTM[0][0],HTM[0][1],HTM[0][2]],
                            [HTM[1][0],HTM[1][1],HTM[1][2]],
@@ -220,23 +232,24 @@ class Simulation(Simulation_base):
         # TODO add your code here
         # Hint: return a numpy array which includes the reference angular
         # positions for all joints after performing inverse kinematics.
-        
+
         ef_pos = self.getJointPos(endEffector)
         step_positions = np.linspace(ef_pos, targetPosition, interpolationSteps)
+        jacobian = self.jacobianMatrix(endEffector)
 
-        Theta = np.zeros(6) #how to generalise this line? 
+        Theta = np.zeros(6) 
 
         for i in range(1,interpolationSteps):
             curr_target = step_positions[i, :]
             dstep = curr_target - ef_pos
             for n in range(0, maxIterPerStep):
                 jacobian = self.jacobianMatrix(endEffector)
-                
+                #how to update end effector position
                 dtheta = np.linalg.pinv(jacobian) * dstep
 
-                Theta += dtheta
                 ef_pos += dstep
-                
+                Theta += dtheta
+
                 if np.abs(ef_pos - curr_target) < threshold:
                     break
         
@@ -252,11 +265,18 @@ class Simulation(Simulation_base):
         """
         #TODO add your code here
         # iterate through joints and update joint states based on IK solver
+        delta_theta = self.inverseKinematics(endEffector, targetPosition, orientation, maxIter, threshold)
+        
+        delta_angluar_positions = dict()
+        joints = ['CHEST_JOINT0'] 
+        if endEffector == 'RHAND': joints += ['RARM_JOINT' + str(n) for n in range(0,6)]
+        else: joints += ['LARM_JOINT' + str(n) for n in range(0,6)]
+
+        for n in range(0,len(joints)): delta_angluar_positions[joints[n]] = delta_theta[n]
+
         pltTime = np.zeros(1)
         pltDistance = np.zeros(3)
-
         
-
         #return pltTime, pltDistance
         pass
 
