@@ -151,7 +151,7 @@ class Simulation(Simulation_base):
         # and a 3x3 array for the rotation matrix
         #return pos, rotmat
 
-        path = list()
+        path = []
         
         if jointName[0] == "R": path += ["RARM_JOINT"+str(n) for n in range(0,6)]
         elif jointName[0] == "L": path += ["LARM_JOINT"+str(n) for n in range(0,6)]
@@ -201,7 +201,7 @@ class Simulation(Simulation_base):
         peff = self.getJointPosition(endEffector)
         joints = ['CHEST_JOINT0'] 
 
-        if endEffector == 'RHAND': joints += ['RARM_JOINT' + str(n) for n in range(0,6)]
+        if endEffector == 'RARM_JOINT5': joints += ['RARM_JOINT' + str(n) for n in range(0,6)]
         else: joints += ['LARM_JOINT' + str(n) for n in range(0,6)]
         
         # x y z
@@ -232,28 +232,27 @@ class Simulation(Simulation_base):
         # TODO add your code here
         # Hint: return a numpy array which includes the reference angular
         # positions for all joints after performing inverse kinematics.
-
-        ef_pos = self.getJointPos(endEffector)
-        step_positions = np.linspace(ef_pos, targetPosition, interpolationSteps)
-        jacobian = self.jacobianMatrix(endEffector)
-
-        Theta = np.zeros(6) 
+        joints = ['CHEST_JOINT0'] 
+        if endEffector == 'RARM_JOINT5': joints += ['RARM_JOINT' + str(n) for n in range(0,5)]
+        else: joints += ['LARM_JOINT' + str(n) for n in range(0,5)]
+        
+        EFpos = self.getJointPosition(endEffector)
+        step_positions = np.linspace(EFpos, targetPosition, interpolationSteps)
+        traj = [[0]*5]
 
         for i in range(1,interpolationSteps):
             curr_target = step_positions[i, :]
-            dstep = curr_target - ef_pos
-            for n in range(0, maxIterPerStep):
-                jacobian = self.jacobianMatrix(endEffector)
-                #how to update end effector position
-                dtheta = np.linalg.pinv(jacobian) * dstep
+            dy = curr_target - EFpos
+            jacobian = self.jacobianMatrix(endEffector)
+            dtheta = np.linalg.pinv(jacobian) * dy
+            EFpos += dy
+            
+            traj.append(traj[i-1]+dtheta)
 
-                ef_pos += dstep
-                Theta += dtheta
-
-                if np.abs(ef_pos - curr_target) < threshold:
-                    break
+            if np.abs(EFpos - curr_target) < threshold:
+                break
         
-        return Theta   
+        return traj
 
     def move_without_PD(self, endEffector, targetPosition, speed=0.01, orientation=None,
         threshold=1e-3, maxIter=3000, debug=False, verbose=False):
@@ -265,17 +264,13 @@ class Simulation(Simulation_base):
         """
         #TODO add your code here
         # iterate through joints and update joint states based on IK solver
-        delta_theta = self.inverseKinematics(endEffector, targetPosition, orientation, maxIter, threshold)
+        traj = self.inverseKinematics(endEffector, targetPosition, orientation, maxIter, threshold)
         
-        delta_angluar_positions = dict()
         joints = ['CHEST_JOINT0'] 
-        if endEffector == 'RHAND': joints += ['RARM_JOINT' + str(n) for n in range(0,6)]
-        else: joints += ['LARM_JOINT' + str(n) for n in range(0,6)]
+        if endEffector == 'RARM_JOINT5': joints += ['RARM_JOINT' + str(n) for n in range(0,5)]
+        else: joints += ['LARM_JOINT' + str(n) for n in range(0,5)]
 
-        for n in range(0,len(joints)): delta_angluar_positions[joints[n]] = delta_theta[n]
-
-        pltTime = np.zeros(1)
-        pltDistance = np.zeros(3)
+        for n in range(0,len(joints)): Simulation.p.resetJointState(self, joints[n], traj[n])
         
         #return pltTime, pltDistance
         pass
