@@ -272,8 +272,10 @@ class Simulation(Simulation_base):
 
         for n in range(0,len(joints)): Simulation.p.resetJointState(self, joints[n], traj[n])
         
-        #return pltTime, pltDistance
-        pass
+        pltTime = []
+        pltDistance = []
+        return pltTime, pltDistance
+    
 
     def tick_without_PD(self):
         """Ticks one step of simulation without PD control. """
