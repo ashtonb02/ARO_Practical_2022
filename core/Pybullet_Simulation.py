@@ -97,7 +97,7 @@ class Simulation(Simulation_base):
             Returns the homogeneous transformation matrices for each joint as a dictionary of matrices.
         """
         TransMats = {}
-        # TODO modify from here
+        # COMPLETE modify from here
         # Hint: the output should be a dictionary with joint names as keys and
         # their corresponding homogeneous transformation matrices as values.
 
@@ -106,11 +106,11 @@ class Simulation(Simulation_base):
             RotMat = self.getJointRotationalMatrix(jointName, theta=0)
             SquTransMat = self.frameTranslationFromParent[jointName]
             
-            Trans = list()
-            for n in range(0,2): Trans.append(SquTransMat[n][3])
+            Translation = list()
+            for n in range(0,2): Translation.append(SquTransMat[n][3])
 
-            np.transpose(np.asarray(Trans))
-            TransMat4x3 = np.concatenate(RotMat, Trans, axis=1)
+            np.transpose(np.asarray(Translation))
+            TransMat4x3 = np.concatenate(RotMat, Translation, axis=1)
             TransMat4x4 = np.concatenate(TransMat4x3, padding)
             TransMats.update({jointName: TransMat4x4})
 
@@ -127,25 +127,24 @@ class Simulation(Simulation_base):
         # and a 3x3 array for the rotation matrix
         #return pos, rotmat
 
-        path = []
-        
-        if jointName[0] == "R": path += ["RARM_JOINT"+str(n) for n in range(0,6)]
-        elif jointName[0] == "L": path += ["LARM_JOINT"+str(n) for n in range(0,6)]
-        elif jointName[0] == "H": path += ["HEAD_JOINT"+str(n) for n in range(0,2)]
+        paths = {"R" : ["RARM_JOINT"+str(n) for n in range(0,6)],
+                 "L" : ["LARM_JOINT"+str(n) for n in range(0,6)],
+                 "H" : ["HEAD_JOINT"+str(n) for n in range(0,6)],}
 
-        HTM = self.getTransformationMatrices()["CHEST_JOINT0"]
+        path = paths[jointName[0]]
+        TransMat = self.getTransformationMatrices()["CHEST_JOINT0"]
 
         if jointName != "CHEST_JOINT0":
             for joint in path:
-                HTM *= self.getTransformationMatrices()[joint] 
+                TransMat *= self.getTransformationMatrices()[joint] 
                 if joint == jointName: break
 
-        pos = np.array([[HTM[0][3]],[HTM[1][3]],[HTM[2][3]]])
-        rotmat = np.array([[HTM[0][0],HTM[0][1],HTM[0][2]],
-                           [HTM[1][0],HTM[1][1],HTM[1][2]],
-                           [HTM[2][0],HTM[2][1],HTM[2][2]]])
+        jonpos = np.array([TransMat[0][3],TransMat[1][3],TransMat[2][3]]).T
+        rotmat = np.array([[TransMat[0][0],TransMat[0][1],TransMat[0][2]],
+                           [TransMat[1][0],TransMat[1][1],TransMat[1][2]],
+                           [TransMat[2][0],TransMat[2][1],TransMat[2][2]]])
 
-        return pos, rotmat
+        return jonpos, rotmat
 
     def getJointPosition(self, jointName):
         """Get the position of a joint in the world frame, leave this unchanged please."""
@@ -172,22 +171,18 @@ class Simulation(Simulation_base):
         # your kinematic chain.
         #return np.array()
 
-        # default end effector is Left arm
+        paths = {"RHAND" : ['CHEST_JOINT0'] + ["RARM_JOINT"+str(n) for n in range(0,6)],
+                 "LHAND" : ['CHEST_JOINT0'] + ["LARM_JOINT"+str(n) for n in range(0,6)],}
 
-        peff = self.getJointPosition(endEffector)
-        joints = ['CHEST_JOINT0'] 
-
-        if endEffector == 'RARM_JOINT5': joints += ['RARM_JOINT' + str(n) for n in range(0,6)]
-        else: joints += ['LARM_JOINT' + str(n) for n in range(0,6)]
+        joints = paths[endEffector]
         
         # x y z
-        #( . . .) n joints downwards |
-        #( . . .)                    v
-        #( . . .)
+        #( * * *) t1
+        #( * * *) ...
+        #( * * *) tn
         
-        #currently only correspodns to position and not orientation
-
-        J = np.array([ (np.cross(self.getJointAxis(k).T, np.subtract(peff,self.getJointPosition(k)))).T for k in joints])
+        PosEndEff = self.getJointPosition(endEffector)
+        J = np.array([ (np.cross(self.getJointAxis(k).T, np.subtract(PosEndEff,self.getJointPosition(k)))).T for k in joints])
         return J
 
     # Task 1.2 Inverse Kinematicse
