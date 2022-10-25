@@ -81,11 +81,9 @@ class Simulation(Simulation_base):
         if jointName == None:
             raise Exception("[getJointRotationalMatrix] \
                 Must provide a joint in order to compute the rotational matrix!")
-        # COMPLETE
+        # COMPLETE modify from here
         # Hint: the output should be a 3x3 rotational matrix as a numpy array
         #return np.matrix()
-
-        #define rotaion matrices for rotation around x, y, & z
 
         rm = {np.array([1, 0, 0]): np.matrix([[1,0,0],[0, (np.cos(theta)), -(np.sin(theta))], [0, (np.sin(theta)), (np.cos(theta))]]),
               np.array([0, 1, 0]): np.matrix([[(np.cos(theta)), 0, (np.sin(theta))], [0,1,0], [-(np.sin(theta)), 0, (np.cos(theta))]]),
@@ -98,29 +96,25 @@ class Simulation(Simulation_base):
         """
             Returns the homogeneous transformation matrices for each joint as a dictionary of matrices.
         """
-        transformationMatrices = {}
-        # COMPLETE modify from here
+        TransMats = {}
+        # TODO modify from here
         # Hint: the output should be a dictionary with joint names as keys and
         # their corresponding homogeneous transformation matrices as values.
 
+        padding = np.array([0,0,0,1])
         for jointName in self.jointRotationAxis:
-            rotation_matrix = self.getJointRotationalMatrix(jointName, theta=0)
-            whole_position_matrix = self.frameTranslationFromParent[jointName]
-            required_position_matrix = []
+            RotMat = self.getJointRotationalMatrix(jointName, theta=0)
+            SquTransMat = self.frameTranslationFromParent[jointName]
             
-            for n in range(0,2):
-                required_position_matrix.append(whole_position_matrix[n][3])
+            Trans = list()
+            for n in range(0,2): Trans.append(SquTransMat[n][3])
 
-            np.transpose(np.asarray(required_position_matrix))
+            np.transpose(np.asarray(Trans))
+            TransMat4x3 = np.concatenate(RotMat, Trans, axis=1)
+            TransMat4x4 = np.concatenate(TransMat4x3, padding)
+            TransMats.update({jointName: TransMat4x4})
 
-            tranform_no_padding = np.concatenate(rotation_matrix, required_position_matrix, axis=1)
-            padding = np.array([0,0,0,1])
-
-            transformation_matrix = np.concatenate(tranform_no_padding, padding)
-
-            transformationMatrices.update({jointName: transformation_matrix})
-
-        return transformationMatrices
+        return TransMats
 
     def getJointLocationAndOrientation(self, jointName):
         """
