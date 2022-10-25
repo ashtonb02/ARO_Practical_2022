@@ -176,6 +176,8 @@ class Simulation(Simulation_base):
 
         joints = paths[endEffector]
         
+        
+
         # x y z
         #( * * *) t1
         #( * * *) ...
@@ -224,6 +226,8 @@ class Simulation(Simulation_base):
                 break
         
         return traj
+        
+            
 
     def move_without_PD(self, endEffector, targetPosition, speed=0.01, orientation=None,
         threshold=1e-3, maxIter=3000, debug=False, verbose=False):
