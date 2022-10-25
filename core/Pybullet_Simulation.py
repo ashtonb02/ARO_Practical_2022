@@ -86,30 +86,12 @@ class Simulation(Simulation_base):
         #return np.matrix()
 
         #define rotaion matrices for rotation around x, y, & z
-        rx = np.matrix([[1,0,0],[0, (np.cos(theta)), -(np.sin(theta))], [0, (np.sin(theta)), (np.cos(theta))]])
-        ry = np.matrix([[(np.cos(theta)), 0, (np.sin(theta))], [0,1,0], [-(np.sin(theta)), 0, (np.cos(theta))]])
-        rz = np.matrix([[np.cos(theta),-np.sin(theta),0],[np.sin(theta), np.cos(theta),0],[0,0,1]])
-        
-        #instantiate zero rotation matrix to replace
-        j_rotmat = np.matrix([[0,0,0],[0,0,0],[0,0,0]])
 
-        # if axis of rotation is x, use x rotation matrix
-        if (self.jointRotationAxis[jointName])[0] == 1:
-            j_rotmat = rx
-
-        # if axis of rotation is y, use y rotation matrix
-        elif (self.jointRotationAxis[jointName])[1] == 1:
-            j_rotmat = ry
-
-        # if axis of rotation is z, use z rotation matrix
-        elif (self.jointRotationAxis[jointName])[2] == 1:
-            j_rotmat = rz
-
-        else:
-            raise Exception("[getJointRotationalMatrix] \
-                Joint rotation axis is an invalid format.")   
-
-        return j_rotmat
+        rm = {np.array([1, 0, 0]): np.matrix([[1,0,0],[0, (np.cos(theta)), -(np.sin(theta))], [0, (np.sin(theta)), (np.cos(theta))]]),
+              np.array([0, 1, 0]): np.matrix([[(np.cos(theta)), 0, (np.sin(theta))], [0,1,0], [-(np.sin(theta)), 0, (np.cos(theta))]]),
+              np.array([0, 0, 1]): np.matrix([[np.cos(theta),-np.sin(theta),0],[np.sin(theta), np.cos(theta),0],[0,0,1]])}
+       
+        return rm[self.jointRotationAxis[jointName]]
         
 
     def getTransformationMatrices(self):
@@ -264,16 +246,22 @@ class Simulation(Simulation_base):
         """
         #TODO add your code here
         # iterate through joints and update joint states based on IK solver
+        pltTime = []
+        pltDistance = []
+
         traj = self.inverseKinematics(endEffector, targetPosition, orientation, maxIter, threshold)
         
         joints = ['CHEST_JOINT0'] 
         if endEffector == 'RARM_JOINT5': joints += ['RARM_JOINT' + str(n) for n in range(0,5)]
         else: joints += ['LARM_JOINT' + str(n) for n in range(0,5)]
-
-        for n in range(0,len(joints)): Simulation.p.resetJointState(self, joints[n], traj[n])
         
-        pltTime = []
-        pltDistance = []
+        self.tick_without_PD()
+
+        for n in range(0,len(joints)):
+            self.jointTargetPos[joints[n]] = traj[n]
+            pltTime.append(n*speed)
+            pltDistance.append(pltDistance[n]+traj[n+1])
+            
         return pltTime, pltDistance
     
 
@@ -282,7 +270,12 @@ class Simulation(Simulation_base):
         # TODO modify from here
         # Iterate through all joints and update joint states.
             # For each joint, you can use the shared variable self.jointTargetPos.
-
+        
+        joints = list(self.jointRotationAxis)
+        
+        for n in range(0,len(joints)):
+            Simulation.p.resetJointState(joints[n], n, self.jointTargetPos[joints[n]])
+            
         self.p.stepSimulation()
         self.drawDebugLines()
         time.sleep(self.dt)
@@ -305,7 +298,7 @@ class Simulation(Simulation_base):
             u(t) - the manipulation signal
         """
         # COMPLETE: Add your code here
-        u = kp*(x_ref - x_real) + kd*(dx_ref - dx_real) + ki*integral
+        u = kp*(x_ref - x_real) - kd*(dx_ref - dx_real)/self.dt + ki*integral
         return u
 
     # Task 2.2 Joint Manipulation
