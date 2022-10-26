@@ -175,8 +175,6 @@ class Simulation(Simulation_base):
                  "LHAND" : ['CHEST_JOINT0'] + ["LARM_JOINT"+str(n) for n in range(0,6)],}
 
         joints = paths[endEffector]
-        
-        
 
         # x y z
         #( * * *) t1
@@ -219,15 +217,12 @@ class Simulation(Simulation_base):
             jacobian = self.jacobianMatrix(endEffector)
             dtheta = np.linalg.pinv(jacobian) * dy
             EFpos += dy
-            
             traj.append(traj[i-1]+dtheta)
 
             if np.abs(EFpos - curr_target) < threshold:
                 break
-        
+
         return traj
-        
-            
 
     def move_without_PD(self, endEffector, targetPosition, speed=0.01, orientation=None,
         threshold=1e-3, maxIter=3000, debug=False, verbose=False):
@@ -239,21 +234,25 @@ class Simulation(Simulation_base):
         """
         #TODO add your code here
         # iterate through joints and update joint states based on IK solver
+
+        EFpos = self.getJointPosition(endEffector)
         pltTime = []
         pltDistance = []
 
-        traj = self.inverseKinematics(endEffector, targetPosition, orientation, maxIter, threshold)
-        
         joints = ['CHEST_JOINT0'] 
         if endEffector == 'RARM_JOINT5': joints += ['RARM_JOINT' + str(n) for n in range(0,5)]
         else: joints += ['LARM_JOINT' + str(n) for n in range(0,5)]
-        
-        self.tick_without_PD()
 
-        for n in range(0,len(joints)):
-            self.jointTargetPos[joints[n]] = traj[n]
+        traj = self.inverseKinematics(endEffector, targetPosition, orientation, maxIter, threshold)
+        
+        for n in range(0,maxIter):
+            self.jointTargetPos = traj
             pltTime.append(n*speed)
             pltDistance.append(pltDistance[n]+traj[n+1])
+            self.tick_without_PD()
+
+            if np.abs(EFpos - targetPosition) < threshold:
+                break
             
         return pltTime, pltDistance
     
@@ -291,7 +290,7 @@ class Simulation(Simulation_base):
             u(t) - the manipulation signal
         """
         # COMPLETE: Add your code here
-        u = kp*(x_ref - x_real) - kd*(dx_ref - dx_real)/self.dt + ki*integral
+        u = kp*(x_ref - x_real) - kd*((dx_ref - dx_real)/self.dt) + ki*integral
         return u
 
     # Task 2.2 Joint Manipulation
