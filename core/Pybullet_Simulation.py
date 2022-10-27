@@ -83,13 +83,14 @@ class Simulation(Simulation_base):
                 Must provide a joint in order to compute the rotational matrix!")
         # COMPLETE modify from here
         # Hint: the output should be a 3x3 rotational matrix as a numpy array
-        #return np.matrix()
+        # return np.matrix()
 
-        rm = {np.array([1, 0, 0]): np.matrix([[1,0,0],[0, (np.cos(theta)), -(np.sin(theta))], [0, (np.sin(theta)), (np.cos(theta))]]),
-              np.array([0, 1, 0]): np.matrix([[(np.cos(theta)), 0, (np.sin(theta))], [0,1,0], [-(np.sin(theta)), 0, (np.cos(theta))]]),
-              np.array([0, 0, 1]): np.matrix([[np.cos(theta),-np.sin(theta),0],[np.sin(theta), np.cos(theta),0],[0,0,1]])}
+        rm = {(1, 0, 0): np.matrix([[1,0,0],[0, (np.cos(theta)), -(np.sin(theta))], [0, (np.sin(theta)), (np.cos(theta))]]),
+              (0, 1, 0): np.matrix([[(np.cos(theta)), 0, (np.sin(theta))], [0,1,0], [-(np.sin(theta)), 0, (np.cos(theta))]]),
+              (0, 0, 1): np.matrix([[np.cos(theta),-np.sin(theta),0],[np.sin(theta), np.cos(theta),0],[0,0,1]]),
+              (0, 0, 0): np.matrix([[1,0,0],[0,1,0],[0,0,1]])}
        
-        return rm[self.jointRotationAxis[jointName]]
+        return rm[tuple(self.jointRotationAxis[jointName])]
         
 
     def getTransformationMatrices(self):
@@ -200,17 +201,20 @@ class Simulation(Simulation_base):
         Return: \\
             Vector of x_refs
         """
-        # TODO add your code here
+        # COMPLETE add your code here
         # Hint: return a numpy array which includes the reference angular
         # positions for all joints after performing inverse kinematics.
-        joints = ['CHEST_JOINT0'] 
-        if endEffector == 'RARM_JOINT5': joints += ['RARM_JOINT' + str(n) for n in range(0,5)]
-        else: joints += ['LARM_JOINT' + str(n) for n in range(0,5)]
+        pjoints = ['CHEST_JOINT0'] 
+        if endEffector == 'RARM_JOINT5': pjoints += ['RARM_JOINT' + str(n) for n in range(0,5)]
+        else: pjoints += ['LARM_JOINT' + str(n) for n in range(0,5)]
         
+        jointAngles = dict.fromkeys(list(self.jointRotationAxis),0)
+
         EFpos = self.getJointPosition(endEffector)
         step_positions = np.linspace(EFpos, targetPosition, interpolationSteps)
         traj = [[0]*5]
 
+        #creates a list with the 5 joint angles we're moving
         for i in range(1,interpolationSteps):
             curr_target = step_positions[i, :]
             dy = curr_target - EFpos
@@ -221,6 +225,10 @@ class Simulation(Simulation_base):
 
             if np.abs(EFpos - curr_target) < threshold:
                 break
+        
+        #creates list with all 17 joint angles
+        for n in range(0,len(pjoints)): jointAngles[pjoints[n]] = traj[len(traj)-1][n]
+        traj = list(jointAngles.values())
 
         return traj
 
@@ -232,24 +240,21 @@ class Simulation(Simulation_base):
         Return:
             pltTime, pltDistance arrays used for plotting
         """
-        #TODO add your code here
+        # TODO add your code here
         # iterate through joints and update joint states based on IK solver
 
         EFpos = self.getJointPosition(endEffector)
         pltTime = []
         pltDistance = []
 
-        joints = ['CHEST_JOINT0'] 
-        if endEffector == 'RARM_JOINT5': joints += ['RARM_JOINT' + str(n) for n in range(0,5)]
-        else: joints += ['LARM_JOINT' + str(n) for n in range(0,5)]
-
         traj = self.inverseKinematics(endEffector, targetPosition, orientation, maxIter, threshold)
-        
+        dtraj = np.linspace(np.array([0]*17,traj,maxIter))
+
         for n in range(0,maxIter):
-            self.jointTargetPos = traj
-            pltTime.append(n*speed)
-            pltDistance.append(pltDistance[n]+traj[n+1])
+            self.jointTargetPos = dict.fromkeys(list(self.jointRotationAxis),dtraj[n])
             self.tick_without_PD()
+            pltTime.append(n*speed)
+            pltDistance.append(pltDistance[n]+dtraj[n])
 
             if np.abs(EFpos - targetPosition) < threshold:
                 break
@@ -265,8 +270,8 @@ class Simulation(Simulation_base):
         
         joints = list(self.jointRotationAxis)
         
-        for n in range(0,len(joints)):
-            Simulation.p.resetJointState(joints[n], n, self.jointTargetPos[joints[n]])
+        for j in range(0,len(joints)):
+            Simulation.p.resetJointState(joints[j], j, self.jointTargetPos[joints[j]])
             
         self.p.stepSimulation()
         self.drawDebugLines()
