@@ -99,23 +99,24 @@ class Simulation(Simulation_base):
         """
             Returns the homogeneous transformation matrices for each joint as a dictionary of matrices.
         """
-        TransMats = {}
+        transformationMatrices = {}
         # COMPLETE: modify from here
         # Hint: the output should be a dictionary with joint names as keys and
         # their corresponding homogeneous transformation matrices as values.
 
         padding = np.array([0,0,0,1])
+        moveableJoints = list(self.jointRotationAxis)[2:len(list(self.jointRotationAxis))-2]
 
-        for jointName in list(self.jointRotationAxis):
+        for jointName in moveableJoints:
 
             RotMat = self.getJointRotationalMatrix(jointName, theta=self.jointPositionOld[jointName])
             Translation = self.frameTranslationFromParent[jointName]
             
             TransMat4x3 = np.c_[RotMat, Translation]
             TransMat4x4 = np.r_[TransMat4x3, [padding]]
-            TransMats.update({jointName: TransMat4x4})
+            transformationMatrices.update({jointName: TransMat4x4})
 
-        return TransMats
+        return transformationMatrices
 
     def getJointLocationAndOrientation(self, jointName):
         """
@@ -123,29 +124,30 @@ class Simulation(Simulation_base):
             according to the topology of the Nextage robot.
         """
         # Remember to multiply the transformation matrices following the kinematic chain for each arm.
-        # COMPLETE modify from here
+        # COMPLETE: modify from here
         # Hint: return two numpy arrays, a 3x1 array for the position vector,
         # and a 3x3 array for the rotation matrix
         #return pos, rotmat
 
-        paths = {"R" : ["RARM_JOINT"+str(n) for n in range(0,6)],
-                 "L" : ["LARM_JOINT"+str(n) for n in range(0,6)],
-                 "H" : ["HEAD_JOINT"+str(n) for n in range(0,6)],}
+        paths = {"C" : ["CHEST_JOINT0"],
+                 "R" : ["RARM_JOINT"+str(n) for n in range(0,6)] + ["RHAND"],
+                 "L" : ["LARM_JOINT"+str(n) for n in range(0,6)] + ["LHAND"],
+                 "H" : ["HEAD_JOINT"+str(n) for n in range(0,2)],}
 
         path = paths[jointName[0]]
         TransMat = self.getTransformationMatrices()["CHEST_JOINT0"]
 
         if jointName != "CHEST_JOINT0":
-            for joint in path:
-                TransMat *= self.getTransformationMatrices()[joint] 
-                if joint == jointName: break
+            for j in path:
+                TransMat *= self.getTransformationMatrices()[j]
+                if j == jointName: break
 
-        jonpos = np.array([TransMat[0][3],TransMat[1][3],TransMat[2][3]]).T
-        rotmat = np.array([[TransMat[0][0],TransMat[0][1],TransMat[0][2]],
-                           [TransMat[1][0],TransMat[1][1],TransMat[1][2]],
-                           [TransMat[2][0],TransMat[2][1],TransMat[2][2]]])
+        pos = np.array([TransMat[0,3],TransMat[1,3],TransMat[2,3]])
+        rotmat = np.array([[TransMat[0,0],TransMat[0,1],TransMat[0,2]],
+                           [TransMat[1,0],TransMat[1,1],TransMat[1,2]],
+                           [TransMat[2,0],TransMat[2,1],TransMat[2,2]]])
 
-        return jonpos, rotmat
+        return pos, rotmat
 
     def getJointPosition(self, jointName):
         """Get the position of a joint in the world frame, leave this unchanged please."""
@@ -172,23 +174,25 @@ class Simulation(Simulation_base):
         # your kinematic chain.
         #return np.array()
 
-        paths = {"RHAND" : ['CHEST_JOINT0'] + ["RARM_JOINT"+str(n) for n in range(0,6)],
-                 "LHAND" : ['CHEST_JOINT0'] + ["LARM_JOINT"+str(n) for n in range(0,6)],}
+        paths = {"RARM_JOINT5" : ['CHEST_JOINT0'] + ["RARM_JOINT"+str(n) for n in range(0,6)],
+                 "LARM_JOINT5" : ['CHEST_JOINT0'] + ["LARM_JOINT"+str(n) for n in range(0,6)],}
 
         joints = paths[endEffector]
-
-        # x y z
-        #( * * *) t1
-        #( * * *) ...
-        #( * * *) tn
         
         PosEndEff = self.getJointPosition(endEffector)
-        J = np.array([ (np.cross(self.getJointAxis(k).T, np.subtract(PosEndEff,self.getJointPosition(k)))).T for k in joints])
-        return J
+        jacobian = np.array([[0,0,0]])
+
+        for n in joints:
+            RotAxis = self.getJointAxis(n)
+            PosJon = self.getJointPosition(n)
+            newrow = np.cross(RotAxis, PosEndEff - PosJon)
+            jacobian = np.r_[jacobian, [newrow]]
+
+        return jacobian[1:]
 
     # Task 1.2 Inverse Kinematicse
 
-    def inverseKinematics(self, endEffector, targetPosition, orientation, interpolationSteps, maxIterPerStep, threshold):
+    def inverseKinematics(self, endEffector, targetPosition, orientation, interpolationSteps, threshold):
         """Your IK solver \\
         Arguments: \\
             endEffector: the jointName the end-effector \\
@@ -204,32 +208,28 @@ class Simulation(Simulation_base):
         # COMPLETE add your code here
         # Hint: return a numpy array which includes the reference angular
         # positions for all joints after performing inverse kinematics.
-        pjoints = ['CHEST_JOINT0'] 
-        if endEffector == 'RARM_JOINT5': pjoints += ['RARM_JOINT' + str(n) for n in range(0,5)]
-        else: pjoints += ['LARM_JOINT' + str(n) for n in range(0,5)]
-        
-        jointAngles = dict.fromkeys(list(self.jointRotationAxis),0)
+
+        paths = {"RARM_JOINT5" : ['CHEST_JOINT0'] + ["RARM_JOINT"+str(n) for n in range(0,6)],
+                 "LARM_JOINT5" : ['CHEST_JOINT0'] + ["LARM_JOINT"+str(n) for n in range(0,6)],}
+
+        joints = paths[endEffector]
 
         EFpos = self.getJointPosition(endEffector)
-        step_positions = np.linspace(EFpos, targetPosition, interpolationSteps)
-        traj = [[0]*5]
+        TargetPositions = np.linspace(EFpos,targetPosition,interpolationSteps)
+        q = np.array([self.jointPositionOld[j] for j in joints])
 
-        #creates a list with the 5 joint angles we're moving
-        for i in range(1,interpolationSteps):
-            curr_target = step_positions[i, :]
-            dy = curr_target - EFpos
+        traj = list(); traj.append([0]*len(joints))
+
+        for n in range(1,interpolationSteps):
+            dy = TargetPositions[n] + TargetPositions[n-1]
             jacobian = self.jacobianMatrix(endEffector)
-            dtheta = np.linalg.pinv(jacobian) * dy
-            EFpos += dy
-            traj.append(traj[i-1]+dtheta)
+            dq = np.matmul(np.transpose(np.linalg.pinv(jacobian)), dy)
 
-            if np.abs(EFpos - curr_target) < threshold:
-                break
+            q += dq
+
+            angles = list((np.array(traj[n-1])+q)%(2 * np.pi))
+            traj.append(angles)
         
-        #creates list with all 17 joint angles
-        for n in range(0,len(pjoints)): jointAngles[pjoints[n]] = traj[len(traj)-1][n]
-        traj = list(jointAngles.values())
-
         return traj
 
     def move_without_PD(self, endEffector, targetPosition, speed=0.01, orientation=None,
@@ -243,37 +243,35 @@ class Simulation(Simulation_base):
         # TODO add your code here
         # iterate through joints and update joint states based on IK solver
 
-        EFpos = self.getJointPosition(endEffector)
-        pltTime = []
-        pltDistance = []
+        pltTime = list()
+        pltDistance = list()
 
-        traj = self.inverseKinematics(endEffector, targetPosition, orientation, maxIter, threshold)
-        dtraj = np.linspace(np.array([0]*17,traj,maxIter))
+        paths = {"RARM_JOINT5" : ['CHEST_JOINT0'] + ["RARM_JOINT"+str(n) for n in range(0,6)],
+                 "LARM_JOINT5" : ['CHEST_JOINT0'] + ["LARM_JOINT"+str(n) for n in range(0,6)],}
 
-        for n in range(0,maxIter):
-            self.jointTargetPos = dict.fromkeys(list(self.jointRotationAxis),dtraj[n])
-            self.tick_without_PD()
-            pltTime.append(n*speed)
-            pltDistance.append(pltDistance[n]+dtraj[n])
+        joints = paths[endEffector]
+        angles = self.inverseKinematics(endEffector,targetPosition,orientation,maxIter,threshold)
 
-            if np.abs(EFpos - targetPosition) < threshold:
-                break
-            
+        for i in range(0, maxIter):
+            changedAngles = dict(zip(joints,angles[i]))
+            for j in joints: self.jointTargetPos[j] = changedAngles[j]
+
+            pltTime.append(speed*i)
+            pltDistance.append(self.getJointPosition(endEffector))
+
+            self.setJoints(self.jointTargetPos)
+            self.drawDebugLines()
+            time.sleep(self.dt)
+        
         return pltTime, pltDistance
-    
+
 
     def tick_without_PD(self):
         """Ticks one step of simulation without PD control. """
         # TODO modify from here
         # Iterate through all joints and update joint states.
-            # For each joint, you can use the shared variable self.jointTargetPos.
+        # For each joint, you can use the shared variable self.jointTargetPos.
         
-        joints = list(self.jointRotationAxis)
-        
-        for j in range(0,len(joints)):
-            Simulation.p.resetJointState(joints[j], j, self.jointTargetPos[joints[j]])
-            
-        self.p.stepSimulation()
         self.drawDebugLines()
         time.sleep(self.dt)
 
