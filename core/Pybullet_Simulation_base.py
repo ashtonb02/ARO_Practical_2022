@@ -526,7 +526,7 @@ class Simulation_base:
         for jointName in jointPoses:
             self.p.resetJointState(
                 self.robot, self.jointIds[jointName], jointPoses[jointName])
-
+                
     def resetRobot(self):
         """Restore the robot to the default settings (robot position and joints, other internal variables)"""
         # Reset the base pose

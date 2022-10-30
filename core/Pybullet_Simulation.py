@@ -1,3 +1,4 @@
+from cmath import pi
 from logging import raiseExceptions
 from ntpath import join
 from turtle import position
@@ -94,7 +95,6 @@ class Simulation(Simulation_base):
        
         return rm[tuple(self.jointRotationAxis[jointName])]
         
-
     def getTransformationMatrices(self):
         """
             Returns the homogeneous transformation matrices for each joint as a dictionary of matrices.
@@ -105,9 +105,15 @@ class Simulation(Simulation_base):
         # their corresponding homogeneous transformation matrices as values.
 
         padding = np.array([0,0,0,1])
+        idenitity = np.array([[1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,1]])
         moveableJoints = list(self.jointRotationAxis)[2:len(list(self.jointRotationAxis))-2]
 
+        transformationMatrices.update({'base_to_dummy': idenitity})
+        transformationMatrices.update({'base_to_waist': idenitity})
+
         for jointName in moveableJoints:
+
+            print(self.p.getJointState())
 
             RotMat = self.getJointRotationalMatrix(jointName, theta=self.jointPositionOld[jointName])
             Translation = self.frameTranslationFromParent[jointName]
@@ -115,6 +121,9 @@ class Simulation(Simulation_base):
             TransMat4x3 = np.c_[RotMat, Translation]
             TransMat4x4 = np.r_[TransMat4x3, [padding]]
             transformationMatrices.update({jointName: TransMat4x4})
+
+        transformationMatrices.update({'RHAND': idenitity})
+        transformationMatrices.update({'LHAND': idenitity})
 
         return transformationMatrices
 
@@ -226,8 +235,8 @@ class Simulation(Simulation_base):
             dq = np.matmul(np.transpose(np.linalg.pinv(jacobian)), dy)
 
             q += dq
-
-            angles = list((np.array(traj[n-1])+q)%(2 * np.pi))
+        
+            angles = np.around( np.arcsin(np.sin(np.array(traj[n-1])+q)) , 2)
             traj.append(angles)
         
         return traj
@@ -252,17 +261,18 @@ class Simulation(Simulation_base):
         joints = paths[endEffector]
         angles = self.inverseKinematics(endEffector,targetPosition,orientation,maxIter,threshold)
 
-        for i in range(0, maxIter):
-            changedAngles = dict(zip(joints,angles[i]))
+        changedAngles = dict(zip(joints,angles[len(angles)-1]))
+        for j in joints: self.jointTargetPos[j] += changedAngles[j]
+
+        for n in range(0, len(angles)):
+            changedAngles = dict(zip(joints,angles[n]))
             for j in joints: self.jointTargetPos[j] = changedAngles[j]
-
-            pltTime.append(speed*i)
-            pltDistance.append(self.getJointPosition(endEffector))
-
-            self.setJoints(self.jointTargetPos)
+            self.p.stepSimulation()
             self.drawDebugLines()
-            time.sleep(self.dt)
-        
+            pltDistance.append(np.linalg.norm(targetPosition - self.getJointPos(endEffector)))
+            pltTime.append(n*self.dt)
+
+        print(self.jointTargetPos)
         return pltTime, pltDistance
 
 
@@ -271,7 +281,8 @@ class Simulation(Simulation_base):
         # TODO modify from here
         # Iterate through all joints and update joint states.
         # For each joint, you can use the shared variable self.jointTargetPos.
-        
+
+        self.p.stepSimulation()
         self.drawDebugLines()
         time.sleep(self.dt)
 

@@ -50,17 +50,26 @@ def IK():
     c = d
     print(c)
 
-def RECARR():
+def getJointRotationalMatrix(jointName=None, theta=None):
+        """
+            Returns the 3x3 rotation matrix for a joint from the axis-angle representation,
+            where the axis is given by the revolution axis of the joint and the angle is theta.
+        """
+        if jointName == None:
+            raise Exception("[getJointRotationalMatrix] \
+                Must provide a joint in order to compute the rotational matrix!")
+        # COMPLETE: modify from here
+        # Hint: the output should be a 3x3 rotational matrix as a numpy array
+        # return np.matrix()
 
-    a = []
-    a.append([0]*3)
-    for n in range(0,10):
-        b = list(np.array([n,n+1,n+2]) + np.array([n,n+1,n+2]))
-        a.append(b)
+        rm = {(1, 0, 0): np.matrix([[1,0,0],[0, np.cos(theta), -np.sin(theta)], [0, np.sin(theta), np.cos(theta)]]),
+              (0, 1, 0): np.matrix([[np.cos(theta), 0, np.sin(theta)], [0,1,0], [-np.sin(theta), 0, np.cos(theta)]]),
+              (0, 0, 1): np.matrix([[np.cos(theta),-np.sin(theta),0],[np.sin(theta), np.cos(theta),0],[0,0,1]]),
+              (0, 0, 0): np.matrix([[1,0,0],[0,1,0],[0,0,1]])}
+       
+        print( np.around(rm[tuple((1,0,0))], 3) ) 
 
-    print(a)
+def angles(t):
+    print( np.around(np.arcsin(np.sin(t)),3) )
 
-
-RECARR()
-
-
+angles(np.array([np.pi, 3*np.pi, 5*np.pi/2]))
