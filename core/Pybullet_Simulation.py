@@ -105,25 +105,16 @@ class Simulation(Simulation_base):
         # their corresponding homogeneous transformation matrices as values.
 
         padding = np.array([0,0,0,1])
-        idenitity = np.array([[1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,1]])
         moveableJoints = list(self.jointRotationAxis)[2:len(list(self.jointRotationAxis))-2]
-
-        transformationMatrices.update({'base_to_dummy': idenitity})
-        transformationMatrices.update({'base_to_waist': idenitity})
 
         for jointName in moveableJoints:
 
-            print(self.p.getJointState())
-
-            RotMat = self.getJointRotationalMatrix(jointName, theta=self.jointPositionOld[jointName])
+            RotMat = self.getJointRotationalMatrix(jointName, theta=self.getJointPos(jointName))
             Translation = self.frameTranslationFromParent[jointName]
             
             TransMat4x3 = np.c_[RotMat, Translation]
             TransMat4x4 = np.r_[TransMat4x3, [padding]]
             transformationMatrices.update({jointName: TransMat4x4})
-
-        transformationMatrices.update({'RHAND': idenitity})
-        transformationMatrices.update({'LHAND': idenitity})
 
         return transformationMatrices
 
@@ -139,8 +130,8 @@ class Simulation(Simulation_base):
         #return pos, rotmat
 
         paths = {"C" : ["CHEST_JOINT0"],
-                 "R" : ["RARM_JOINT"+str(n) for n in range(0,6)] + ["RHAND"],
-                 "L" : ["LARM_JOINT"+str(n) for n in range(0,6)] + ["LHAND"],
+                 "R" : ["RARM_JOINT"+str(n) for n in range(0,6)],
+                 "L" : ["LARM_JOINT"+str(n) for n in range(0,6)],
                  "H" : ["HEAD_JOINT"+str(n) for n in range(0,2)],}
 
         path = paths[jointName[0]]
@@ -151,7 +142,7 @@ class Simulation(Simulation_base):
                 TransMat *= self.getTransformationMatrices()[j]
                 if j == jointName: break
 
-        pos = np.array([TransMat[0,3],TransMat[1,3],TransMat[2,3]])
+        pos = np.array([[TransMat[0,3]],[TransMat[1,3]],[TransMat[2,3]]])
         rotmat = np.array([[TransMat[0,0],TransMat[0,1],TransMat[0,2]],
                            [TransMat[1,0],TransMat[1,1],TransMat[1,2]],
                            [TransMat[2,0],TransMat[2,1],TransMat[2,2]]])
@@ -183,21 +174,27 @@ class Simulation(Simulation_base):
         # your kinematic chain.
         #return np.array()
 
+        #Jacobian
+        #t1 . tn
+        #(* * *) x
+        #(* * *) y
+        #(* * *) z
+
         paths = {"RARM_JOINT5" : ['CHEST_JOINT0'] + ["RARM_JOINT"+str(n) for n in range(0,6)],
                  "LARM_JOINT5" : ['CHEST_JOINT0'] + ["LARM_JOINT"+str(n) for n in range(0,6)],}
 
         joints = paths[endEffector]
         
         PosEndEff = self.getJointPosition(endEffector)
-        jacobian = np.array([[0,0,0]])
+        jacobian = np.array([[0],[0],[0]])
 
-        for n in joints:
-            RotAxis = self.getJointAxis(n)
-            PosJon = self.getJointPosition(n)
-            newrow = np.cross(RotAxis, PosEndEff - PosJon)
-            jacobian = np.r_[jacobian, [newrow]]
-
-        return jacobian[1:]
+        for j in joints:
+            RotAxis = self.getJointAxis(j)
+            PosJon = self.getJointPosition(j)
+            newcol = np.cross(RotAxis, (PosEndEff - PosJon).flatten())
+            jacobian = np.c_[jacobian, newcol]
+        
+        return np.delete(jacobian,0,axis=1)
 
     # Task 1.2 Inverse Kinematicse
 
@@ -222,23 +219,19 @@ class Simulation(Simulation_base):
                  "LARM_JOINT5" : ['CHEST_JOINT0'] + ["LARM_JOINT"+str(n) for n in range(0,6)],}
 
         joints = paths[endEffector]
-
-        EFpos = self.getJointPosition(endEffector)
+        EFpos = self.getJointPosition(endEffector).flatten()
         TargetPositions = np.linspace(EFpos,targetPosition,interpolationSteps)
-        q = np.array([self.jointPositionOld[j] for j in joints])
 
         traj = list(); traj.append([0]*len(joints))
-
+    
         for n in range(1,interpolationSteps):
-            dy = TargetPositions[n] + TargetPositions[n-1]
+            dy = TargetPositions[n] - TargetPositions[n-1]
             jacobian = self.jacobianMatrix(endEffector)
-            dq = np.matmul(np.transpose(np.linalg.pinv(jacobian)), dy)
+            dq = np.matmul(np.linalg.pinv(jacobian), dy)
 
-            q += dq
-        
-            angles = np.around( np.arcsin(np.sin(np.array(traj[n-1])+q)) , 2)
+            angles = list( np.arcsin(np.sin( np.array(traj[n-1])+dq )) )
             traj.append(angles)
-        
+
         return traj
 
     def move_without_PD(self, endEffector, targetPosition, speed=0.01, orientation=None,
@@ -260,16 +253,16 @@ class Simulation(Simulation_base):
 
         joints = paths[endEffector]
         angles = self.inverseKinematics(endEffector,targetPosition,orientation,maxIter,threshold)
-
         changedAngles = dict(zip(joints,angles[len(angles)-1]))
         for j in joints: self.jointTargetPos[j] += changedAngles[j]
+
+        print(self.jointTargetPos)
 
         for n in range(0, len(angles)):
             changedAngles = dict(zip(joints,angles[n]))
             for j in joints: self.jointTargetPos[j] = changedAngles[j]
-            self.p.stepSimulation()
-            self.drawDebugLines()
-            pltDistance.append(np.linalg.norm(targetPosition - self.getJointPos(endEffector)))
+            self.tick_without_PD()
+            pltDistance.append(np.linalg.norm(targetPosition - self.getJointPosition(endEffector)))
             pltTime.append(n*self.dt)
 
         print(self.jointTargetPos)
