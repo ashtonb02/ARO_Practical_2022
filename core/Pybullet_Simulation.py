@@ -230,6 +230,7 @@ class Simulation(Simulation_base):
             dq = np.matmul(np.linalg.pinv(jacobian), dy)
 
             angles = list(np.arcsin(np.sin( np.array(traj[n-1])+dq )))
+            print(angles)
             traj.append(angles)
 
         return traj
@@ -270,7 +271,7 @@ class Simulation(Simulation_base):
         
         for j in range(0, len(self.jointTargetPos)):
             self.p.resetJointState(self.robot, self.jointIds[j], self.jointTargetPos[j])
-            
+
         self.p.stepSimulation()
         self.drawDebugLines()
         time.sleep(self.dt)
