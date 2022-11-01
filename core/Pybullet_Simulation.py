@@ -229,7 +229,9 @@ class Simulation(Simulation_base):
             jacobian = self.jacobianMatrix(endEffector)
             dq = np.matmul(np.linalg.pinv(jacobian), dy)
 
-            angles = list( np.arcsin(np.sin( np.array(traj[n-1])+dq )) )
+            angles = list(np.arcsin(np.sin( np.array(traj[n-1])+dq )))
+
+            print(angles)
             traj.append(angles)
 
         return traj
