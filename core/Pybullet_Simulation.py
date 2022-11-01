@@ -166,7 +166,7 @@ class Simulation(Simulation_base):
 
     def jacobianMatrix(self, endEffector):
         """Calculate the Jacobian Matrix for the Nextage Robot."""
-        # COMPLETE modify from here
+        # COMPLETE: modify from here
         # You can implement the cross product yourself or use calculateJacobian().
         # Hint: you should return a numpy array for your Jacobian matrix. The
         # size of the matrix will depend on your chosen convention. You can have
@@ -211,7 +211,7 @@ class Simulation(Simulation_base):
         Return: \\
             Vector of x_refs
         """
-        # COMPLETE add your code here
+        # COMPLETE: add your code here
         # Hint: return a numpy array which includes the reference angular
         # positions for all joints after performing inverse kinematics.
 
@@ -242,7 +242,7 @@ class Simulation(Simulation_base):
         Return:
             pltTime, pltDistance arrays used for plotting
         """
-        # TODO add your code here
+        # COMPLETE: add your code here
         # iterate through joints and update joint states based on IK solver
 
         pltTime = list()
@@ -267,7 +267,7 @@ class Simulation(Simulation_base):
 
     def tick_without_PD(self):
         """Ticks one step of simulation without PD control. """
-        # TODO modify from here
+        # COMPLETE: modify from here
         # Iterate through all joints and update joint states.
         # For each joint, you can use the shared variable self.jointTargetPos.
         
