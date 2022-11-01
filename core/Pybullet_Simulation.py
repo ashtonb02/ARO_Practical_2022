@@ -57,7 +57,7 @@ class Simulation(Simulation_base):
         'base_to_dummy': np.zeros(3),  # Virtual joint
         'base_to_waist': np.zeros(3),  # Fixed joint
         # COMPLETE: modify from here
-        'CHEST_JOINT0': np.array([0,0,0.267]),
+        'CHEST_JOINT0': np.array([0,0,1.117]),
         'HEAD_JOINT0': np.array([0,0,0.302]),
         'HEAD_JOINT1': np.array([0,0,0.066]),
         'LARM_JOINT0': np.array([0.04,0.135,0.1015]),
@@ -225,12 +225,12 @@ class Simulation(Simulation_base):
         traj = list(); traj.append([0]*len(joints))
     
         for n in range(1,interpolationSteps):
+            print("IK: ",n)
             dy = TargetPositions[n] - TargetPositions[n-1]
             jacobian = self.jacobianMatrix(endEffector)
             dq = np.matmul(np.linalg.pinv(jacobian), dy)
 
             angles = list(np.arcsin(np.sin( np.array(traj[n-1])+dq )))
-            print(angles)
             traj.append(angles)
 
         return traj
@@ -256,14 +256,14 @@ class Simulation(Simulation_base):
         angles = self.inverseKinematics(endEffector, targetPosition, orientation, maxIter, threshold)
         
         for n in range(0, maxIter):
+            print("PD: ",n)
             jointStates = dict(zip(joints, angles[n]))
             for j in joints: self.jointTargetPos[j] = jointStates[j]
-            print("tick " + str(n))
-            print()
             self.tick_without_PD()
             pltTime.append(n*self.dt)
-            pltDistance.append( np.linalg.norm(targetPosition - self.getJointPosition[endEffector]) )
+            pltDistance.append(np.linalg.norm(self.getJointPosition(endEffector) - targetPosition))
         
+        return pltTime, pltDistance
 
     def tick_without_PD(self):
         """Ticks one step of simulation without PD control. """
@@ -271,11 +271,9 @@ class Simulation(Simulation_base):
         # Iterate through all joints and update joint states.
         # For each joint, you can use the shared variable self.jointTargetPos.
         
-        #for j in range(0, len(self.jointTargetPos)):
-            #self.p.resetJointState(self.robot, self.jointIds[j], self.jointTargetPos[j])
-        
-        self.setJoints(self.jointTargetPos)
-
+        for j in list(self.jointTargetPos):
+            self.p.resetJointState(self.robot, self.jointIds[j], self.jointTargetPos[j])
+       
         self.p.stepSimulation()
         self.drawDebugLines()
         time.sleep(self.dt)
