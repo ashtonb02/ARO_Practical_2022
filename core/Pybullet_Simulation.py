@@ -225,7 +225,6 @@ class Simulation(Simulation_base):
         traj = list(); traj.append([0]*len(joints))
     
         for n in range(1,interpolationSteps):
-            print("IK: ",n)
             dy = TargetPositions[n] - TargetPositions[n-1]
             jacobian = self.jacobianMatrix(endEffector)
             dq = np.matmul(np.linalg.pinv(jacobian), dy)
@@ -256,12 +255,13 @@ class Simulation(Simulation_base):
         angles = self.inverseKinematics(endEffector, targetPosition, orientation, maxIter, threshold)
         
         for n in range(0, maxIter):
-            print("PD: ",n)
             jointStates = dict(zip(joints, angles[n]))
             for j in joints: self.jointTargetPos[j] = jointStates[j]
             self.tick_without_PD()
             pltTime.append(n*self.dt)
-            pltDistance.append(np.linalg.norm(self.getJointPosition(endEffector) - targetPosition))
+            tp = np.transpose(np.array([targetPosition]))
+
+            pltDistance.append(np.linalg.norm(self.getJointPosition(endEffector)-tp))
         
         return pltTime, pltDistance
 

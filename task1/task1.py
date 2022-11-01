@@ -61,7 +61,7 @@ endEffector = "LARM_JOINT5"
 targetPosition = np.array([0.37, 0.23, 1.06385])  # x,y,z coordinates in world frame
 
 # Example code. Feel free to modify
-pltTime, pltEFPosition = sim.move_without_PD(endEffector, targetPosition, speed=0.01, orientation=None, threshold=1e-3, maxIter=10, debug=False, verbose=False)
+pltTime, pltEFPosition = sim.move_without_PD(endEffector, targetPosition, speed=0.01, orientation=None, threshold=1e-3, maxIter=3000, debug=False, verbose=False)
 
 #sim.inverseKinematics(endEffector, targetPosition, 0, 10, 0)
 
@@ -71,7 +71,7 @@ task1_savefig = True
 # ...
 fig = plt.figure(figsize=(6, 4))
 
-#plt.plot(pltTime, pltEFPosition, color='blue')
+plt.plot(pltTime, pltEFPosition, color='blue')
 plt.xlabel("Time s")
 plt.ylabel("Distance to target position")
 
