@@ -230,8 +230,6 @@ class Simulation(Simulation_base):
             dq = np.matmul(np.linalg.pinv(jacobian), dy)
 
             angles = list(np.arcsin(np.sin( np.array(traj[n-1])+dq )))
-
-            print(angles)
             traj.append(angles)
 
         return traj
@@ -254,29 +252,25 @@ class Simulation(Simulation_base):
                  "LARM_JOINT5" : ['CHEST_JOINT0'] + ["LARM_JOINT"+str(n) for n in range(0,6)],}
 
         joints = paths[endEffector]
-        angles = self.inverseKinematics(endEffector,targetPosition,orientation,maxIter,threshold)
-        changedAngles = dict(zip(joints,angles[len(angles)-1]))
-        for j in joints: self.jointTargetPos[j] += changedAngles[j]
-
-        print(self.jointTargetPos)
-
-        for n in range(0, len(angles)):
-            changedAngles = dict(zip(joints,angles[n]))
-            for j in joints: self.jointTargetPos[j] = changedAngles[j]
+        angles = self.inverseKinematics(endEffector, targetPosition, orientation, maxIter, threshold)
+        
+        for n in range(0, maxIter):
+            jointStates = dict(zip(joints, angles[n]))
+            for j in joints: self.jointTargetPos[j] = jointStates[j]
             self.tick_without_PD()
-            pltDistance.append(np.linalg.norm(targetPosition - self.getJointPosition(endEffector)))
             pltTime.append(n*self.dt)
-
-        print(self.jointTargetPos)
-        return pltTime, pltDistance
-
+            pltDistance.append( np.linalg.norm(targetPosition - self.getJointPosition[endEffector]) )
+        
 
     def tick_without_PD(self):
         """Ticks one step of simulation without PD control. """
         # TODO modify from here
         # Iterate through all joints and update joint states.
         # For each joint, you can use the shared variable self.jointTargetPos.
-
+        
+        for j in range(0, len(self.jointTargetPos)):
+            self.p.resetJointState(self.robot, self.jointIds[j], self.jointTargetPos[j])
+            
         self.p.stepSimulation()
         self.drawDebugLines()
         time.sleep(self.dt)
