@@ -258,6 +258,8 @@ class Simulation(Simulation_base):
         for n in range(0, maxIter):
             jointStates = dict(zip(joints, angles[n]))
             for j in joints: self.jointTargetPos[j] = jointStates[j]
+            print("tick " + n)
+            print()
             self.tick_without_PD()
             pltTime.append(n*self.dt)
             pltDistance.append( np.linalg.norm(targetPosition - self.getJointPosition[endEffector]) )
