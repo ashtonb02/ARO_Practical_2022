@@ -258,7 +258,7 @@ class Simulation(Simulation_base):
         for n in range(0, maxIter):
             jointStates = dict(zip(joints, angles[n]))
             for j in joints: self.jointTargetPos[j] = jointStates[j]
-            print("tick " + n)
+            print("tick " + str(n))
             print()
             self.tick_without_PD()
             pltTime.append(n*self.dt)
@@ -271,8 +271,10 @@ class Simulation(Simulation_base):
         # Iterate through all joints and update joint states.
         # For each joint, you can use the shared variable self.jointTargetPos.
         
-        for j in range(0, len(self.jointTargetPos)):
-            self.p.resetJointState(self.robot, self.jointIds[j], self.jointTargetPos[j])
+        #for j in range(0, len(self.jointTargetPos)):
+            #self.p.resetJointState(self.robot, self.jointIds[j], self.jointTargetPos[j])
+        
+        self.setJoints(self.jointTargetPos)
 
         self.p.stepSimulation()
         self.drawDebugLines()
