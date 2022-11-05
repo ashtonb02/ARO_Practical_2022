@@ -296,7 +296,7 @@ class Simulation(Simulation_base):
             u(t) - the manipulation signal
         """
         # COMPLETE: Add your code here
-        u = kp*(x_ref - x_real) - kd*((dx_ref - dx_real)/self.dt) + ki*integral
+        u = kp*(x_ref - x_real) - kd*(dx_real) + ki*integral
         return u
 
     # Task 2.2 Joint Manipulation
@@ -319,8 +319,6 @@ class Simulation(Simulation_base):
             torque = self.calculateTorque(x_ref, x_real, dx_ref, dx_real, integral, kp, ki, kd)
             ### To here ###
 
-            pltTorque.append(torque)
-
             # send the manipulation signal to the joint
             self.p.setJointMotorControl2(
                 bodyIndex=self.robot,
@@ -332,12 +330,27 @@ class Simulation(Simulation_base):
             self.p.stepSimulation()
             time.sleep(self.dt)
 
+            return torque
+    
         targetPosition, targetVelocity = float(targetPosition), float(targetVelocity)
-
         # disable joint velocity controller before apply a torque
         self.disableVelocityController(joint)
         # logging for the graph
+
         pltTime, pltTarget, pltTorque, pltTorqueTime, pltPosition, pltVelocity = [], [], [], [], [], []
+        n = 0
+
+        while targetPosition != self.getJointPos(joint):
+            n += 1
+            torque = toy_tick(targetPosition, self.getJointPos(joint), targetVelocity, self.getJointVel(joint),0)
+            pltTorque.append(torque)
+            pltTorqueTime.append(self.dt*n)
+            pltTime.append(self.dt*n)
+            pltTarget.append(targetPosition)
+            pltPosition.append(self.getJointPos(joint))
+            pltVelocity.append(self.getJointVel(joint))
+            if n > 100:
+                break
 
         return pltTime, pltTarget, pltTorque, pltTorqueTime, pltPosition, pltVelocity
 
@@ -358,8 +371,9 @@ class Simulation(Simulation_base):
         # controller to converge to the final target position after performing
         # all IK iterations (optional).
 
-        #return pltTime, pltDistance
+        # return pltTime, pltDistance
         pass
+        
 
     def tick(self):
         """Ticks one step of simulation using PD control."""
@@ -380,7 +394,7 @@ class Simulation(Simulation_base):
 
             ### Implement your code from here ... ###
             # TODO: obtain torque from PD controller
-            torque = 0.0  # TODO: fix me
+            torque = 0.0
             ### ... to here ###
 
             self.p.setJointMotorControl2(
