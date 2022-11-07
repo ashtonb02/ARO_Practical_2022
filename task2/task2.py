@@ -65,6 +65,7 @@ pltTime, pltTarget, pltTorque, pltTorqueTime, pltPosition, pltVelocity = \
 fig = plt.figure(figsize=(6, 8))
 
 plt.subplot(311)
+plt.ylim(0.03,0.04)
 plt.plot(pltTime, pltPosition, color='blue')
 plt.plot(pltTime, pltTarget, color='magenta')
 plt.ylabel("Theta rads")
