@@ -1,5 +1,6 @@
 from cmath import pi
 from logging import raiseExceptions
+from multiprocessing.dummy import JoinableQueue
 from ntpath import join
 from turtle import position
 from scipy.spatial.transform import Rotation as npRotation
@@ -103,7 +104,6 @@ class Simulation(Simulation_base):
         # COMPLETE: modify from here
         # Hint: the output should be a dictionary with joint names as keys and
         # their corresponding homogeneous transformation matrices as values.
-
         padding = np.array([0,0,0,1])
         moveableJoints = list(self.jointRotationAxis)[2:len(list(self.jointRotationAxis))-2]
 
@@ -118,6 +118,26 @@ class Simulation(Simulation_base):
 
         return transformationMatrices
 
+    def getEndEffPath(self, endEffector):
+
+        if endEffector == "CHEST_JOINT0":
+            return [endEffector]
+        
+        path = ["CHEST_JOINT0"]
+        num = endEffector[-1]
+        let = endEffector[0]
+
+        if endEffector not in list(self.jointRotationAxis):
+            raise Exception("[getEndEffPath] \
+                Must provide a joint in order to compute the rotational matrix!")
+
+        fullpaths = {"R" : ["RARM_JOINT"+str(n) for n in range(0,int(num)+1)],
+                     "L" : ["LARM_JOINT"+str(n) for n in range(0,int(num)+1)],
+                     "H" : ["HEAD_JOINT"+str(n) for n in range(0,int(num)+1)],}
+        
+        path += fullpaths[let]
+        return path
+
     def getJointLocationAndOrientation(self, jointName):
         """
             Returns the position and rotation matrix of a given joint using Forward Kinematics
@@ -129,18 +149,13 @@ class Simulation(Simulation_base):
         # and a 3x3 array for the rotation matrix
         #return pos, rotmat
 
-        paths = {"C" : ["CHEST_JOINT0"],
-                 "R" : ["RARM_JOINT"+str(n) for n in range(0,6)],
-                 "L" : ["LARM_JOINT"+str(n) for n in range(0,6)],
-                 "H" : ["HEAD_JOINT"+str(n) for n in range(0,2)],}
+        transMats = self.getTransformationMatrices()
 
-        path = paths[jointName[0]]
-        TransMat = self.getTransformationMatrices()["CHEST_JOINT0"]
+        TransMat = np.array([[1.,0.,0.,0.],[0.,1.,0.,0.],[0.,0.,1.,0.],[0.,0.,0.,1.]])
+        path = self.getEndEffPath(jointName)
+        
+        for j in path: TransMat=np.matmul(TransMat,transMats[j])
 
-        if jointName != "CHEST_JOINT0":
-            for j in path:
-                TransMat *= self.getTransformationMatrices()[j]
-                if j == jointName: break
 
         pos = np.array([[TransMat[0,3]],[TransMat[1,3]],[TransMat[2,3]]])
         rotmat = np.array([[TransMat[0,0],TransMat[0,1],TransMat[0,2]],
@@ -180,11 +195,7 @@ class Simulation(Simulation_base):
         #(* * *) y
         #(* * *) z
 
-        paths = {"RARM_JOINT5" : ['CHEST_JOINT0'] + ["RARM_JOINT"+str(n) for n in range(0,6)],
-                 "LARM_JOINT5" : ['CHEST_JOINT0'] + ["LARM_JOINT"+str(n) for n in range(0,6)],}
-
-        joints = paths[endEffector]
-        
+        joints = self.getEndEffPath(endEffector)
         PosEndEff = self.getJointPosition(endEffector)
         jacobian = np.array([[0],[0],[0]])
 
@@ -215,10 +226,7 @@ class Simulation(Simulation_base):
         # Hint: return a numpy array which includes the reference angular
         # positions for all joints after performing inverse kinematics.
 
-        paths = {"RARM_JOINT5" : ['CHEST_JOINT0'] + ["RARM_JOINT"+str(n) for n in range(0,6)],
-                 "LARM_JOINT5" : ['CHEST_JOINT0'] + ["LARM_JOINT"+str(n) for n in range(0,6)],}
-
-        joints = paths[endEffector]
+        joints = self.getEndEffPath(endEffector)
         EFpos = self.getJointPosition(endEffector).flatten()
         TargetPositions = np.linspace(EFpos,targetPosition,interpolationSteps)
 
@@ -231,6 +239,10 @@ class Simulation(Simulation_base):
 
             angles = list(np.arcsin(np.sin( np.array(traj[n-1])+dq )))
             traj.append(angles)
+
+            EFpos = self.getJointPosition(endEffector).flatten()
+            if np.linalg.norm((targetPosition - EFpos)) < threshold:
+                break
 
         return traj
 
@@ -248,10 +260,7 @@ class Simulation(Simulation_base):
         pltTime = list()
         pltDistance = list()
 
-        paths = {"RARM_JOINT5" : ['CHEST_JOINT0'] + ["RARM_JOINT"+str(n) for n in range(0,6)],
-                 "LARM_JOINT5" : ['CHEST_JOINT0'] + ["LARM_JOINT"+str(n) for n in range(0,6)],}
-
-        joints = paths[endEffector]
+        joints = self.getEndEffPath(endEffector)
         angles = self.inverseKinematics(endEffector, targetPosition, orientation, maxIter, threshold)
         
         for n in range(0, maxIter):
@@ -260,8 +269,12 @@ class Simulation(Simulation_base):
             self.tick_without_PD()
             pltTime.append(n*self.dt)
             tp = np.transpose(np.array([targetPosition]))
+            efp = self.getJointPosition(endEffector)
 
-            pltDistance.append(np.linalg.norm(self.getJointPosition(endEffector)-tp))
+            pltDistance.append(np.linalg.norm(efp-tp))
+
+            if np.linalg.norm((tp - efp)) < threshold:
+                break
         
         return pltTime, pltDistance
 
@@ -338,17 +351,12 @@ class Simulation(Simulation_base):
         # logging for the graph
 
         pltTime, pltTarget, pltTorque, pltTorqueTime, pltPosition, pltVelocity = [], [], [], [], [], []
-        n = 0
 
-        while n < 1000:
-            n += 1
+        for n in range(0,3000):
             torque = toy_tick(targetPosition, self.getJointPos(joint), targetVelocity, self.getJointVel(joint),0)
-            pltTorque.append(torque)
-            pltTorqueTime.append(self.dt*n)
-            pltTime.append(self.dt*n)
-            pltTarget.append(targetPosition)
-            pltPosition.append(self.getJointPos(joint))
-            pltVelocity.append(self.getJointVel(joint))
+            pltTorque.append(torque); pltTorqueTime.append(self.dt*n)
+            pltTime.append(self.dt*n); pltTarget.append(targetPosition)
+            pltPosition.append(self.getJointPos(joint)); pltVelocity.append(self.getJointVel(joint))
 
         return pltTime, pltTarget, pltTorque, pltTorqueTime, pltPosition, pltVelocity
 
@@ -370,7 +378,27 @@ class Simulation(Simulation_base):
         # all IK iterations (optional).
 
         # return pltTime, pltDistance
-        pass
+
+        pltTime = list()
+        pltDistance = list()
+
+        joints = self.getEndEffPath(endEffector)
+        angles = self.inverseKinematics(endEffector, targetPosition, orientation, maxIter, threshold)
+        tp = np.transpose(np.array([targetPosition]))
+
+        for n in range(0, maxIter):
+            jointStates = dict(zip(joints, angles[n]))
+            for j in joints: self.jointTargetPos[j] = jointStates[j]
+            self.tick()
+            pltTime.append(n*self.dt)
+            efp = self.getJointPosition(endEffector)
+            pltDistance.append(np.linalg.norm(efp-tp))
+
+            if np.linalg.norm((tp - efp)) < threshold:
+                break
+        
+        
+        return pltTime, pltDistance
         
 
     def tick(self):
@@ -392,7 +420,8 @@ class Simulation(Simulation_base):
 
             ### Implement your code from here ... ###
             # TODO: obtain torque from PD controller
-            torque = 0.0
+
+            torque = self.calculateTorque(self.jointTargetPos[joint], self.getJointPos(joint), 0, self.getJointVel(joint), 0, kp, ki, kd)
             ### ... to here ###
 
             self.p.setJointMotorControl2(
