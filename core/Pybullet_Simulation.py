@@ -151,7 +151,7 @@ class Simulation(Simulation_base):
 
         transMats = self.getTransformationMatrices()
 
-        TransMat = np.array([[1.,0.,0.,0.],[0.,1.,0.,0.],[0.,0.,1.,0.],[0.,0.,0.,1.]])
+        TransMat = np.identity(4)
         path = self.getEndEffPath(jointName)
         
         for j in path: TransMat=np.matmul(TransMat,transMats[j])
@@ -384,19 +384,19 @@ class Simulation(Simulation_base):
 
         joints = self.getEndEffPath(endEffector)
         angles = self.inverseKinematics(endEffector, targetPosition, orientation, maxIter, threshold)
-        tp = np.transpose(np.array([targetPosition]))
-
+        
         for n in range(0, maxIter):
             jointStates = dict(zip(joints, angles[n]))
             for j in joints: self.jointTargetPos[j] = jointStates[j]
             self.tick()
             pltTime.append(n*self.dt)
+            tp = np.transpose(np.array([targetPosition]))
             efp = self.getJointPosition(endEffector)
+
             pltDistance.append(np.linalg.norm(efp-tp))
 
             if np.linalg.norm((tp - efp)) < threshold:
                 break
-        
         
         return pltTime, pltDistance
         
