@@ -60,8 +60,8 @@ task2_savefig = False
 
 pltTime, pltEFPosition = sim.move_with_PD(task2_jointName, task2_targetPosition, speed=0.01, orientation=None, threshold=1e-3, maxIter=200, debug=False, verbose=False)
 
-task1_figure_name = "task2_kinematics.png"
-task1_savefig = True
+#task1_figure_name = "task2_kinematics.png"
+#task1_savefig = True
 # ...
 #fig = plt.figure(figsize=(6, 4))
 
@@ -87,7 +87,6 @@ pltTime, pltTarget, pltTorque, pltTorqueTime, pltPosition, pltVelocity = \
 fig = plt.figure(figsize=(6, 8))
 
 plt.subplot(311)
-plt.ylim(task2_targetPosition-0.035,task2_targetPosition+0.035)
 plt.plot(pltTime, pltPosition, color='blue')
 plt.plot(pltTime, pltTarget, color='magenta')
 plt.ylabel("Theta rads")

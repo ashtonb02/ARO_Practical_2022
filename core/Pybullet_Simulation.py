@@ -352,11 +352,13 @@ class Simulation(Simulation_base):
 
         pltTime, pltTarget, pltTorque, pltTorqueTime, pltPosition, pltVelocity = [], [], [], [], [], []
 
-        for n in range(0,3000):
+        n=0
+        while n < 3000:
             torque = toy_tick(targetPosition, self.getJointPos(joint), targetVelocity, self.getJointVel(joint),0)
             pltTorque.append(torque); pltTorqueTime.append(self.dt*n)
             pltTime.append(self.dt*n); pltTarget.append(targetPosition)
             pltPosition.append(self.getJointPos(joint)); pltVelocity.append(self.getJointVel(joint))
+            n += 1
 
         return pltTime, pltTarget, pltTorque, pltTorqueTime, pltPosition, pltVelocity
 
