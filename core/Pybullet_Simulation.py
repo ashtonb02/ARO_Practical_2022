@@ -121,23 +121,22 @@ class Simulation(Simulation_base):
 
     def getEndEffPath(self, endEffector):
 
-        if endEffector == "CHEST_JOINT0":
-            return [endEffector]
-        
-        path = ["CHEST_JOINT0"]
-        num = endEffector[-1]
-        let = endEffector[0]
-
         if endEffector not in list(self.jointRotationAxis):
             raise Exception("[getEndEffPath] \
                 Must provide a joint in order to compute the rotational matrix!")
 
-        fullpaths = {"R" : ["RARM_JOINT"+str(n) for n in range(0,int(num)+1)],
-                     "L" : ["LARM_JOINT"+str(n) for n in range(0,int(num)+1)],
-                     "H" : ["HEAD_JOINT"+str(n) for n in range(0,int(num)+1)],}
+        path = ["CHEST_JOINT0"]
+        if endEffector == "CHEST_JOINT0": return path
         
-        path += fullpaths[let]
+        fullpaths = {"R" : ["RARM_JOINT"+str(n) for n in range(0,int(endEffector[-1])+1)],
+                     "L" : ["LARM_JOINT"+str(n) for n in range(0,int(endEffector[-1])+1)],
+                     "H" : ["HEAD_JOINT"+str(n) for n in range(0,int(endEffector[-1])+1)],}
+        
+        path += fullpaths[endEffector[0]]
         return path
+
+    def convertAngle(self, n):
+        return np.arcsin(np.sin(n))
 
     def getJointLocationAndOrientation(self, jointName):
         """
@@ -156,7 +155,6 @@ class Simulation(Simulation_base):
         path = self.getEndEffPath(jointName)
         
         for j in path: TransMat=np.matmul(TransMat,transMats[j])
-
 
         pos = np.array([[TransMat[0,3]],[TransMat[1,3]],[TransMat[2,3]]])
         rotmat = np.array([[TransMat[0,0],TransMat[0,1],TransMat[0,2]],
@@ -237,10 +235,8 @@ class Simulation(Simulation_base):
             dy = TargetPositions[n] - TargetPositions[n-1]
             jacobian = self.jacobianMatrix(endEffector)
             dq = np.matmul(np.linalg.pinv(jacobian), dy)
-            print(n)
-            angles = list(np.arcsin(np.sin( np.array(traj[n-1])+dq )))
+            angles = list(self.convertAngle(np.array(traj[n-1])+dq))
             traj.append(angles)
-
             EFpos = self.getJointPosition(endEffector).flatten()
             if np.linalg.norm((targetPosition - EFpos)) < threshold:
                 break
