@@ -229,7 +229,7 @@ class Simulation(Simulation_base):
         EFpos = self.getJointPosition(endEffector).flatten()
         TargetPositions = np.linspace(EFpos,targetPosition,interpolationSteps)
 
-        traj = list(); traj.append([0]*len(joints))
+        traj =[[0]*len(joints)]
     
         for n in range(1,interpolationSteps):
             dy = TargetPositions[n] - TargetPositions[n-1]
@@ -237,7 +237,9 @@ class Simulation(Simulation_base):
             dq = np.matmul(np.linalg.pinv(jacobian), dy)
             angles = list(self.convertAngle(np.array(traj[n-1])+dq))
             traj.append(angles)
-            EFpos = self.getJointPosition(endEffector).flatten()
+            EFpos = TargetPositions[n]
+            print(n, EFpos)
+
             if np.linalg.norm((targetPosition - EFpos)) < threshold:
                 break
 
@@ -260,7 +262,7 @@ class Simulation(Simulation_base):
         joints = self.getEndEffPath(endEffector)
         angles = self.inverseKinematics(endEffector, targetPosition, orientation, maxIter, threshold)
         
-        for n in range(0, maxIter):
+        for n in range(0, len(angles)):
             jointStates = dict(zip(joints, angles[n]))
             for j in joints: self.jointTargetPos[j] = jointStates[j]
             self.tick_without_PD()
@@ -272,6 +274,8 @@ class Simulation(Simulation_base):
 
             if np.linalg.norm((tp - efp)) < threshold:
                 break
+
+            
         
         return pltTime, pltDistance
 
