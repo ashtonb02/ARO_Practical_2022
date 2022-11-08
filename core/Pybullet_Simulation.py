@@ -82,9 +82,10 @@ class Simulation(Simulation_base):
             Returns the 3x3 rotation matrix for a joint from the axis-angle representation,
             where the axis is given by the revolution axis of the joint and the angle is theta.
         """
-        if jointName == None:
+        if jointName == None or jointName not in list(self.jointRotationAxis):
             raise Exception("[getJointRotationalMatrix] \
-                Must provide a joint in order to compute the rotational matrix!")
+                Must provide a valid joint in order to compute the rotational matrix!")
+
         # COMPLETE: modify from here
         # Hint: the output should be a 3x3 rotational matrix as a numpy array
         # return np.matrix()
@@ -103,18 +104,18 @@ class Simulation(Simulation_base):
         transformationMatrices = {}
         # COMPLETE: modify from here
         # Hint: the output should be a dictionary with joint names as keys and
-        # their corresponding homogeneous transformation matrices as values.
-        padding = np.array([0,0,0,1])
+        # their corresponding homogeneous transformation matrices as values 
         moveableJoints = list(self.jointRotationAxis)[2:len(list(self.jointRotationAxis))-2]
-
         for jointName in moveableJoints:
-
             RotMat = self.getJointRotationalMatrix(jointName, theta=self.getJointPos(jointName))
-            Translation = self.frameTranslationFromParent[jointName]
+            Trans = self.frameTranslationFromParent[jointName]
+
+            TransMat = np.array([[RotMat[0,0],RotMat[0,1],RotMat[0,2],Trans[0]],
+                                [RotMat[1,0],RotMat[1,1],RotMat[1,2],Trans[1]],
+                                [RotMat[2,0],RotMat[2,1],RotMat[2,2],Trans[2]],
+                                [0,0,0,1]])
             
-            TransMat4x3 = np.c_[RotMat, Translation]
-            TransMat4x4 = np.r_[TransMat4x3, [padding]]
-            transformationMatrices.update({jointName: TransMat4x4})
+            transformationMatrices.update({jointName: TransMat})
 
         return transformationMatrices
 
@@ -236,7 +237,7 @@ class Simulation(Simulation_base):
             dy = TargetPositions[n] - TargetPositions[n-1]
             jacobian = self.jacobianMatrix(endEffector)
             dq = np.matmul(np.linalg.pinv(jacobian), dy)
-
+            print(n)
             angles = list(np.arcsin(np.sin( np.array(traj[n-1])+dq )))
             traj.append(angles)
 
