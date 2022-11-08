@@ -196,15 +196,15 @@ class Simulation(Simulation_base):
 
         joints = self.getEndEffPath(endEffector)
         PosEndEff = self.getJointPosition(endEffector)
-        jacobian = np.array([[0],[0],[0]])
+        jacobian = []
 
         for j in joints:
             RotAxis = self.getJointAxis(j)
             PosJon = self.getJointPosition(j)
             newcol = np.cross(RotAxis, (PosEndEff - PosJon).flatten())
-            jacobian = np.c_[jacobian, newcol]
+            jacobian.append(newcol)
         
-        return np.delete(jacobian,0,axis=1)
+        return np.transpose(jacobian)
 
     # Task 1.2 Inverse Kinematicse
 
@@ -238,7 +238,7 @@ class Simulation(Simulation_base):
             angles = list(self.convertAngle(np.array(traj[n-1])+dq))
             traj.append(angles)
             EFpos = TargetPositions[n]
-            print(n, EFpos)
+            print(EFpos)
 
             if np.linalg.norm((targetPosition - EFpos)) < threshold:
                 break
