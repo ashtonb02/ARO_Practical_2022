@@ -204,13 +204,6 @@ class Simulation(Simulation_base):
             newcol = np.cross(RotAxis, (EFPos - PosJon)).flatten()
             jacobian.append(newcol)
 
-
-        #for j in joints:
-        #    RotAxis = self.getJointAxis(j)
-        #    PosJon = self.getJointPosition(j)
-        #    newcol = np.cross(RotAxis, (PosEndEff - PosJon).flatten())
-        #    jacobian.append(newcol)
-        
         return np.transpose(jacobian)
 
     # Task 1.2 Inverse Kinematicse
