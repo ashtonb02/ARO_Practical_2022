@@ -194,15 +194,16 @@ class Simulation(Simulation_base):
         #(* * *) y
         #(* * *) z
 
-        jacobian = []
         joints = self.getEndEffPath(endEffector)
-        
+        jacobian = np.zeros((len(joints), 3))
+        n = 0      
 
         for j in joints:
             RotAxis = self.getJointAxis(j)
             PosJon = self.getJointPos(j)
             newcol = np.cross(RotAxis, (EFPos - PosJon)).flatten()
-            jacobian.append(newcol)
+            jacobian[n] = newcol
+            n+=1
 
         return np.transpose(jacobian)
 
