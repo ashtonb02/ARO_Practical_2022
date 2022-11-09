@@ -201,7 +201,6 @@ class Simulation(Simulation_base):
         for j in joints:
             RotAxis = self.getJointAxis(j)
             PosJon = self.getJointPosition(j).flatten()
-            print(EFPos-PosJon)
             newcol = np.cross(RotAxis, (EFPos - PosJon)).flatten()
             jacobian[n] = newcol
             n+=1
@@ -237,7 +236,6 @@ class Simulation(Simulation_base):
             newGoal = TargetPositions[n, :]
             dy = newGoal - EFpos
             jacobian = np.array(self.jacobianMatrix(EFpos, endEffector))
-            print(EFpos)
             dq = np.matmul(np.linalg.pinv(jacobian), dy)
             angles = list(self.convertAngle(np.array(traj[n-1])+dq))
             traj.append(angles)
