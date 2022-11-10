@@ -57,11 +57,11 @@ debugLine = True
 ref = [0, 0, 1]
 sim = Simulation(pybulletConfigs, robotConfigs, refVect=ref)
 
-endEffector = "LARM_JOINT5"
-targetPosition = np.array([0.37, 0.23, 1.06385])  # x,y,z coordinates in world frame
+endEffector = "RARM_JOINT5"
+targetPosition = np.array([0.5, 0.4, 1.06385])  # x,y,z coordinates in world frame
 
 # Example code. Feel free to modify
-pltTime, pltEFPosition = sim.move_without_PD(endEffector, targetPosition, speed=0.01, orientation=None, threshold=1e-3, maxIter=200, debug=False, verbose=False)
+pltTime, pltEFPosition = sim.move_without_PD(endEffector, targetPosition, speed=0.01, orientation=None, threshold=1e-2, maxIter=100, debug=False, verbose=False)
 
 # Now plot some graphs
 task1_figure_name = "task1_kinematics.png"

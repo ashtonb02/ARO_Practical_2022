@@ -106,7 +106,8 @@ class Simulation(Simulation_base):
         # COMPLETE: modify from here
         # Hint: the output should be a dictionary with joint names as keys and
         # their corresponding homogeneous transformation matrices as values 
-        moveableJoints = list(self.jointRotationAxis)[2:len(list(self.jointRotationAxis))-2]
+        moveableJoints = self.getMoveableJoints()
+
         for jointName in moveableJoints:
             RotMat = self.getJointRotationalMatrix(jointName, theta=self.jointTargetPos[jointName])
             Trans = self.frameTranslationFromParent[jointName]
@@ -138,6 +139,9 @@ class Simulation(Simulation_base):
 
     def convertAngle(self, n):
         return np.arcsin(np.sin(n))
+
+    def getMoveableJoints(self):
+        return list(self.jointRotationAxis)[2:len(list(self.jointRotationAxis))-2]
 
     def getJointLocationAndOrientation(self, jointName):
         """
@@ -179,7 +183,7 @@ class Simulation(Simulation_base):
         """Get the orientation of a joint in the world frame, leave this unchanged please."""
         return np.array(self.getJointLocationAndOrientation(jointName)[1] @ self.jointRotationAxis[jointName]).squeeze()
 
-    def jacobianMatrix(self, EFPos, endEffector):
+    def jacobianMatrix(self, EFPos, endEffectorPath):
         """Calculate the Jacobian Matrix for the Nextage Robot."""
         # COMPLETE: modify from here
         # You can implement the cross product yourself or use calculateJacobian().
@@ -195,11 +199,10 @@ class Simulation(Simulation_base):
         #(* * *) y
         #(* * *) z
 
-        joints = self.getEndEffPath(endEffector)
-        jacobian = np.zeros((len(joints), 3))
+        jacobian = np.zeros((len(endEffectorPath), 3))
         n = 0      
 
-        for j in joints:
+        for j in endEffectorPath:
             RotAxis = self.getJointAxis(j)
             PosJon = self.getJointPosition(j).flatten()
             newcol = np.cross(RotAxis, (EFPos - PosJon)).flatten()
@@ -231,24 +234,24 @@ class Simulation(Simulation_base):
         EFpos = self.getJointPosition(endEffector).flatten()
         TargetPositions = np.linspace(EFpos,targetPosition,interpolationSteps)
 
-        traj =[[0]*len(joints)]
+        angularTraj =[[0]*len(joints)]
     
         for n in range(1,interpolationSteps):
             newGoal = TargetPositions[n, :]
             dy = newGoal - EFpos
-            jacobian = np.array(self.jacobianMatrix(EFpos, endEffector))
+            jacobian = self.jacobianMatrix(EFpos, joints)
             dq = np.matmul(np.linalg.pinv(jacobian), dy)
-            angles = list(self.convertAngle(np.array(traj[n-1])+dq))
-            traj.append(angles)
+
+            angles = list(self.convertAngle(np.array(angularTraj[n-1])+dq))
+            angularTraj.append(angles)
             EFpos = TargetPositions[n]
-            print("IK", n)
-            jointStates = dict(zip(joints, angles))
-            for j in joints: self.jointTargetPos[j] = jointStates[j]
+
+            for j in range(0, len(joints)): self.jointTargetPos[joints[j]] = angles[j]
 
             if np.linalg.norm((targetPosition - EFpos)) < threshold:
                 break
 
-        return np.asarray(traj)
+        return np.asarray(angularTraj)
 
     def move_without_PD(self, endEffector, targetPosition, speed=0.01, orientation=None,
         threshold=1e-3, maxIter=3000, debug=False, verbose=False):
@@ -268,20 +271,19 @@ class Simulation(Simulation_base):
         angles = self.inverseKinematics(endEffector, targetPosition, orientation, maxIter, threshold)
         
         for n in range(0, len(angles)-1):
-            jointStates = dict(zip(joints, angles[n]))
-            for j in joints: self.jointTargetPos[j] = jointStates[j]
+            for j in range(0, len(joints)): self.jointTargetPos[joints[j]] = angles[n][j]
             self.tick_without_PD()
-            pltTime.append(n*self.dt)
+            
             tp = np.transpose(np.array([targetPosition]))
-
             efp = self.getJointPosition(endEffector)
 
+            pltTime.append(n*self.dt)
             pltDistance.append(np.linalg.norm(efp-tp))
+            print(n, np.linalg.norm((tp - efp)))
 
             if np.linalg.norm((tp - efp)) < threshold:
                 break
 
-        
         return pltTime, pltDistance
 
     def tick_without_PD(self):
