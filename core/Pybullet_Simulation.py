@@ -96,6 +96,7 @@ class Simulation(Simulation_base):
               (0, 0, 0): np.matrix([[1,0,0],[0,1,0],[0,0,1]])}
        
         return rm[tuple(self.jointRotationAxis[jointName])]
+
         
     def getTransformationMatrices(self):
         """
@@ -276,7 +277,6 @@ class Simulation(Simulation_base):
             if np.linalg.norm((tp - efp)) < threshold:
                 break
 
-            
         
         return pltTime, pltDistance
 
@@ -311,7 +311,7 @@ class Simulation(Simulation_base):
             u(t) - the manipulation signal
         """
         # COMPLETE: Add your code here
-        u = kp*(x_ref - x_real) - kd*(dx_real) + ki*integral
+        u = kp*(x_ref - x_real) - kd*(-dx_real+dx_ref) + ki*integral
         return u
 
     # Task 2.2 Joint Manipulation
@@ -389,9 +389,8 @@ class Simulation(Simulation_base):
         joints = self.getEndEffPath(endEffector)
         angles = self.inverseKinematics(endEffector, targetPosition, orientation, maxIter, threshold)
         
-        for n in range(0, maxIter):
-            jointStates = dict(zip(joints, angles[n]))
-            for j in joints: self.jointTargetPos[j] = jointStates[j]
+        for n in range(0, len(angles)-1):
+            for j in range(0,len(joints)): self.jointTargetPos[joints[j]] = angles[j]
             self.tick()
             pltTime.append(n*self.dt)
             tp = np.transpose(np.array([targetPosition]))

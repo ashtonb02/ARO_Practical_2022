@@ -26,23 +26,23 @@ LARM_JOINT0_position_controller:
 LARM_JOINT1_position_controller:
   type: effort_controllers/JointPositionController
   joint: LARM_JOINT1
-  pid: {p: 725.0, i: 5.0, d: 9.0}
+  pid: {p: 725.0, i: 0.0, d: 9.0}
 LARM_JOINT2_position_controller:
   type: effort_controllers/JointPositionController
   joint: LARM_JOINT2
-  pid: {p: 150.0, i: 2.0, d: 20}
+  pid: {p: 150.0, i: 0.0, d: 20}
 LARM_JOINT3_position_controller:
   type: effort_controllers/JointPositionController
   joint: LARM_JOINT3
-  pid: {p: 90.0, i: 1.0, d: 2.31}
+  pid: {p: 90.0, i: 0.0, d: 2.31}
 LARM_JOINT4_position_controller:
   type: effort_controllers/JointPositionController
   joint: LARM_JOINT4
-  pid: {p: 400.0, i: 5.0, d: 5.75}
+  pid: {p: 400.0, i: 0.0, d: 5.75}
 LARM_JOINT5_position_controller:
   type: effort_controllers/JointPositionController
   joint: LARM_JOINT5
-  pid: {p: 75.0, i: 1.0, d: 1.65}
+  pid: {p: 75.0, i: 0.0, d: 1.65}
 # Position Controllers (Right arm) ---------------------------------------
 RARM_JOINT0_position_controller:
   type: effort_controllers/JointPositionController
@@ -51,20 +51,20 @@ RARM_JOINT0_position_controller:
 RARM_JOINT1_position_controller:
   type: effort_controllers/JointPositionController
   joint: RARM_JOINT1
-  pid: {p: 725.0, i: 5.0, d: 9.0}
+  pid: {p: 725.0, i: 0.0, d: 9.0}
 RARM_JOINT2_position_controller:
   type: effort_controllers/JointPositionController
   joint: RARM_JOINT2
-  pid: {p: 150.0, i: 2.0, d: 1.8}
+  pid: {p: 150.0, i: 0.0, d: 1.8}
 RARM_JOINT3_position_controller:
   type: effort_controllers/JointPositionController
   joint: RARM_JOINT3
-  pid: {p: 400.0, i: 5.0, d: 2.31}
+  pid: {p: 400.0, i: 0.0, d: 2.31}
 RARM_JOINT4_position_controller:
   type: effort_controllers/JointPositionController
   joint: RARM_JOINT4
-  pid: {p: 400.0, i: 5.0, d: 5.75}
+  pid: {p: 400.0, i: 0.0, d: 5.75}
 RARM_JOINT5_position_controller:
   type: effort_controllers/JointPositionController
   joint: RARM_JOINT5
-  pid: {p: 75.0, i: 1.0, d: 1.65}
+  pid: {p: 75.0, i: 0.0, d: 1.65}
