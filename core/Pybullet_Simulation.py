@@ -108,7 +108,7 @@ class Simulation(Simulation_base):
         # their corresponding homogeneous transformation matrices as values 
         moveableJoints = list(self.jointRotationAxis)[2:len(list(self.jointRotationAxis))-2]
         for jointName in moveableJoints:
-            RotMat = self.getJointRotationalMatrix(jointName, theta=self.getJointPos(jointName))
+            RotMat = self.getJointRotationalMatrix(jointName, theta=self.jointTargetPos[jointName])
             Trans = self.frameTranslationFromParent[jointName]
 
             TransMat = np.array([[RotMat[0,0],RotMat[0,1],RotMat[0,2],Trans[0]],
@@ -241,6 +241,10 @@ class Simulation(Simulation_base):
             angles = list(self.convertAngle(np.array(traj[n-1])+dq))
             traj.append(angles)
             EFpos = TargetPositions[n]
+            print("IK", n)
+            jointStates = dict(zip(joints, angles))
+            for j in joints: self.jointTargetPos[j] = jointStates[j]
+
             if np.linalg.norm((targetPosition - EFpos)) < threshold:
                 break
 
