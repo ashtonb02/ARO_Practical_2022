@@ -55,8 +55,8 @@ task2_figure_name = "task2_PD_response.png"
 task2_savefig = False
 ### to here
 
-#endEffector = "LARM_JOINT5"
-#targetPosition = np.array([0.37, 0.23, 1.06385])
+endEffector = "LARM_JOINT5"
+targetPosition = np.array([0.37, 0.23, 1.06385])
 
 pltTime, pltEFPosition = sim.move_with_PD(task2_jointName, task2_targetPosition, speed=0.01, orientation=None, threshold=1e-3, maxIter=500, debug=False, verbose=False)
 

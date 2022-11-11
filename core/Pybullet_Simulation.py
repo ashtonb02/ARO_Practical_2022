@@ -464,13 +464,23 @@ class Simulation(Simulation_base):
         cubic spline defined by the control points,
         sampled nTimes along the curve.
         """
-        #TODO add your code here
+        # COMPLETE add your code here
         # Return 'nTimes' points per dimension in 'points' (typically a 2xN array),
         # sampled from a cubic spline defined by 'points' and a boundary condition.
         # You may use methods found in scipy.interpolate
 
-        #return xpoints, ypoints
-        pass
+        xpoints, ypoints = [], []
+
+        poly = CubicSpline(range(0, len(points)), points)
+        step = (len(points)-1)/ nTimes
+        dist = 0
+
+        for n in range(0,nTimes+1):
+            xpoints.append(poly(dist)[0])
+            ypoints.append(poly(dist)[1])
+            dist += step
+
+        return xpoints, ypoints
 
     # Task 3.1 Pushing
     def dockingToPosition(self, leftTargetAngle, rightTargetAngle, angularSpeed=0.005,

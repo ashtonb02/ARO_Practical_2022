@@ -58,7 +58,7 @@ ref = [0, 0, 1]
 sim = Simulation(pybulletConfigs, robotConfigs, refVect=ref)
 
 endEffector = "RARM_JOINT5"
-targetPosition = np.array([0.5, 0.4, 1.06385])  # x,y,z coordinates in world frame
+targetPosition = np.array([0.3, 0.2, 1.06385])  # x,y,z coordinates in world frame
 
 # Example code. Feel free to modify
 pltTime, pltEFPosition = sim.move_without_PD(endEffector, targetPosition, speed=0.01, orientation=None, threshold=1e-2, maxIter=100, debug=False, verbose=False)
