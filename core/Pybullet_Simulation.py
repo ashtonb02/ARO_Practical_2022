@@ -279,7 +279,6 @@ class Simulation(Simulation_base):
 
             pltTime.append(n*self.dt)
             pltDistance.append(np.linalg.norm(efp-tp))
-            print(n, np.linalg.norm((tp - efp)))
 
             if np.linalg.norm((tp - efp)) < threshold:
                 break
