@@ -183,7 +183,7 @@ class Simulation(Simulation_base):
         """Get the orientation of a joint in the world frame, leave this unchanged please."""
         return np.array(self.getJointLocationAndOrientation(jointName)[1] @ self.jointRotationAxis[jointName]).squeeze()
 
-    def jacobianMatrix(self, EFPos, endEffectorPath):
+    def jacobianMatrix(self, EFState, endEffectorPath):
         """Calculate the Jacobian Matrix for the Nextage Robot."""
         # COMPLETE: modify from here
         # You can implement the cross product yourself or use calculateJacobian().
@@ -199,17 +199,28 @@ class Simulation(Simulation_base):
         #(* * *) y
         #(* * *) z
 
-        jacobian = np.zeros((len(endEffectorPath), 3))
-        n = 0      
-
+        jacobianPos = np.zeros((len(endEffectorPath), 3))
+        jacobianOrt = np.zeros((len(endEffectorPath), 3))
+        EFPos = np.array([EFState[0],EFState[1],EFState[2]])
+        EFOrt = np.array([EFState[3],EFState[4],EFState[5]])
+        
+        n = 0
         for j in endEffectorPath:
             RotAxis = self.getJointAxis(j)
             PosJon = self.getJointPosition(j).flatten()
             newcol = np.cross(RotAxis, (EFPos - PosJon)).flatten()
-            jacobian[n] = newcol
+            jacobianPos[n] = newcol
             n+=1
 
-        return np.transpose(jacobian)
+        n = 0
+        for j in endEffectorPath:
+            RotAxis = self.getJointAxis(j)
+            newcol = np.cross(RotAxis, EFOrt)
+            jacobianOrt[n] = newcol
+            n+=1
+
+        jacobian = np.concatenate((np.transpose(jacobianPos), np.transpose(jacobianOrt)))
+        return jacobian
 
     # Task 1.2 Inverse Kinematicse
 
@@ -232,23 +243,25 @@ class Simulation(Simulation_base):
 
         joints = self.getEndEffPath(endEffector)
         EFpos = self.getJointPosition(endEffector).flatten()
-        TargetPositions = np.linspace(EFpos,targetPosition,interpolationSteps)
+        EFort = self.getJointOrientation(endEffector)
+        EFstate = np.append(EFpos,EFort)
 
-        angularTraj =[[0]*len(joints)]
+        targetState = np.append(targetPosition, orientation)
+        TargetStates = np.linspace(EFstate,targetState,interpolationSteps)
+        angularTraj =[[0]*(len(joints))]
     
         for n in range(1,interpolationSteps):
-            newGoal = TargetPositions[n, :]
-            dy = newGoal - EFpos
-            jacobian = self.jacobianMatrix(EFpos, joints)
+            newGoal = TargetStates[n, :]
+            dy = newGoal - EFstate
+            jacobian = self.jacobianMatrix(EFstate, joints)
             dq = np.matmul(np.linalg.pinv(jacobian), dy)
-
             angles = list(self.convertAngle(np.array(angularTraj[n-1])+dq))
             angularTraj.append(angles)
-            EFpos = TargetPositions[n]
+            EFstate = TargetStates[n]
 
             for j in range(0, len(joints)): self.jointTargetPos[joints[j]] = angles[j]
 
-            if np.linalg.norm((targetPosition - EFpos)) < threshold:
+            if np.linalg.norm((targetState - EFstate)) < threshold:
                 break
 
         return np.asarray(angularTraj)
