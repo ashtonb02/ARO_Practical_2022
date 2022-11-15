@@ -202,7 +202,7 @@ class Simulation(Simulation_base):
         jacobianPos = np.zeros((len(endEffectorPath), 3))
         jacobianOrt = np.zeros((len(endEffectorPath), 3))
         EFPos = np.array([EFState[0],EFState[1],EFState[2]])
-        EFOrt = np.array([EFState[3],EFState[4],EFState[5]])
+        EForientation = np.array([EFState[3],EFState[4],EFState[5]])
         
         n = 0
         for j in endEffectorPath:
@@ -215,7 +215,7 @@ class Simulation(Simulation_base):
         n = 0
         for j in endEffectorPath:
             RotAxis = self.getJointAxis(j)
-            newcol = np.cross(RotAxis, EFOrt)
+            newcol = np.cross(RotAxis, EForientation)
             jacobianOrt[n] = newcol
             n+=1
 
@@ -243,8 +243,8 @@ class Simulation(Simulation_base):
 
         joints = self.getEndEffPath(endEffector)
         EFpos = self.getJointPosition(endEffector).flatten()
-        EFort = self.getJointOrientation(endEffector)
-        EFstate = np.append(EFpos,EFort)
+        EForientation = self.getJointOrientation(endEffector)
+        EFstate = np.append(EFpos,EForientation)
 
         targetState = np.append(targetPosition, orientation)
         TargetStates = np.linspace(EFstate,targetState,interpolationSteps)
@@ -284,7 +284,10 @@ class Simulation(Simulation_base):
         angles = self.inverseKinematics(endEffector, targetPosition, orientation, maxIter, threshold)
         
         for n in range(0, len(angles)-1):
-            for j in range(0, len(joints)): self.jointTargetPos[joints[j]] = angles[n][j]
+            for j in range(0, len(joints)): 
+                self.jointTargetPos[joints[j]] = angles[n+1][j]
+                self.jointPositionOld[joints[j]] = angles[n][j]
+
             self.tick_without_PD()
             
             tp = np.transpose(np.array([targetPosition]))
@@ -408,7 +411,10 @@ class Simulation(Simulation_base):
         angles = self.inverseKinematics(endEffector, targetPosition, orientation, maxIter, threshold)
         
         for n in range(0, len(angles)-1):
-            for j in range(0,len(joints)): self.jointTargetPos[joints[j]] = angles[j]
+            for j in range(0,len(joints)): 
+                self.jointTargetPos[joints[j]] = angles[n+1][j]
+                self.jointPositionOld[joints[j]] = angles[n][j]
+
             self.tick()
             pltTime.append(n*self.dt)
             tp = np.transpose(np.array([targetPosition]))
@@ -441,8 +447,7 @@ class Simulation(Simulation_base):
 
             ### Implement your code from here ... ###
             # TODO: obtain torque from PD controller
-
-            torque = self.calculateTorque(self.jointTargetPos[joint], self.getJointPos(joint), 0, self.getJointVel(joint), 0, kp, ki, kd)
+            torque = self.calculateTorque(self.jointTargetPos[joint], self.getJointPos(joint), 0,  (self.getJointPos(joint) - self.jointPositionOld[joint])/self.dt, 0, kp, ki, kd)
             ### ... to here ###
 
             self.p.setJointMotorControl2(
@@ -470,7 +475,7 @@ class Simulation(Simulation_base):
         time.sleep(self.dt)
 
     ########## Task 3: Robot Manipulation ##########
-    def cubic_interpolation(self, points, nTimes=100):
+    def cubic_interpolation(self, States, nTimes=100):
         """
         Given a set of control points, return the
         cubic spline defined by the control points,
@@ -481,18 +486,17 @@ class Simulation(Simulation_base):
         # sampled from a cubic spline defined by 'points' and a boundary condition.
         # You may use methods found in scipy.interpolate
 
-        xpoints, ypoints = [], []
+        EFStates = []
 
-        poly = CubicSpline(range(0, len(points)), points)
-        step = (len(points)-1)/ nTimes
+        poly = CubicSpline(range(0, len(States)), States)
+        step = (len(States)-1)/ nTimes
         dist = 0
 
         for n in range(0,nTimes+1):
-            xpoints.append(poly(dist)[0])
-            ypoints.append(poly(dist)[1])
+            EFStates.append([poly(dist)[0], poly(dist)[1], poly(dist)[2], poly(dist)[3], poly(dist)[4], poly(dist)[5]])
             dist += step
 
-        return xpoints, ypoints
+        return EFStates
 
     # Task 3.1 Pushing
     def dockingToPosition(self, leftTargetAngle, rightTargetAngle, angularSpeed=0.005,
