@@ -332,7 +332,7 @@ class Simulation(Simulation_base):
             u(t) - the manipulation signal
         """
         # COMPLETE: Add your code here
-        u = kp*(x_ref - x_real) - kd*(-dx_real+dx_ref) + ki*integral
+        u = kp*(x_ref - x_real) - kd*(dx_real-dx_ref) + ki*integral
         return u
 
     # Task 2.2 Joint Manipulation
