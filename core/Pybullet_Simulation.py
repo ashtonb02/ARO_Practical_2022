@@ -242,6 +242,7 @@ class Simulation(Simulation_base):
         # Hint: return a numpy array which includes the reference angular
         # positions for all joints after performing inverse kinematics.
 
+        angularTraj = []
         joints = self.getEndEffPath(endEffector)
         EFpos = self.getJointPosition(endEffector).flatten()
         EForientation = self.getJointOrientation(endEffector)
@@ -249,7 +250,9 @@ class Simulation(Simulation_base):
 
         targetState = np.append(targetPosition, orientation)
         TargetStates = np.linspace(EFstate,targetState,interpolationSteps)
-        angularTraj =[[0]*(len(joints))]
+        
+        for j in joints: angularTraj.append(self.getJointPos(j))
+        angularTraj = [list(angularTraj)]
     
         for n in range(1,interpolationSteps):
             newGoal = TargetStates[n, :]
@@ -288,8 +291,8 @@ class Simulation(Simulation_base):
             for j in range(0, len(joints)): 
                 self.jointTargetPos[joints[j]] = angles[n+1][j]
                 self.jointPositionOld[joints[j]] = angles[n][j]
-            self.jointTargetPos["LARM_JOINT5"] = -( self.getJointPos("CHEST_JOINT0") + self.getJointPos("LARM_JOINT0") )
-            self.jointTargetPos["RARM_JOINT5"] = -( self.getJointPos("CHEST_JOINT0") + self.getJointPos("RARM_JOINT0") )
+                self.jointTargetPos["LARM_JOINT5"] = -( self.getJointPos("CHEST_JOINT0") + self.getJointPos("LARM_JOINT0") )
+                self.jointTargetPos["RARM_JOINT5"] = -( self.getJointPos("CHEST_JOINT0") + self.getJointPos("RARM_JOINT0") )
 
             self.tick_without_PD()
             
@@ -417,8 +420,8 @@ class Simulation(Simulation_base):
             for j in range(0,len(joints)): 
                 self.jointTargetPos[joints[j]] = angles[n+1][j]
                 self.jointPositionOld[joints[j]] = angles[n][j]
-            self.jointTargetPos["LARM_JOINT5"] = -( self.getJointPos("CHEST_JOINT0") + self.getJointPos("LARM_JOINT0") )
-            self.jointTargetPos["RARM_JOINT5"] = -( self.getJointPos("CHEST_JOINT0") + self.getJointPos("RARM_JOINT0") )
+                self.jointTargetPos["LARM_JOINT5"] = -( self.getJointPos("CHEST_JOINT0") + self.getJointPos("LARM_JOINT0") )
+                self.jointTargetPos["RARM_JOINT5"] = -( self.getJointPos("CHEST_JOINT0") + self.getJointPos("RARM_JOINT0") )
 
             self.tick()
             pltTime.append(n*self.dt)
