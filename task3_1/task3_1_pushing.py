@@ -90,7 +90,6 @@ def getReadyForTask():
 
 
 def solution():
-    # TODO: Add your code here
     pass
 
 tableId, cubeId, targetId = getReadyForTask()

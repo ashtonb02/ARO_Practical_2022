@@ -105,6 +105,6 @@ plt.show()
 #plt.tight_layout()
 #plt.subplots_adjust(left=0.15)
 
-if task2_savefig:
-   fig.savefig(task2_figure_name)
-plt.show()
+#if task2_savefig:
+#   fig.savefig(task2_figure_name)
+#plt.show()
