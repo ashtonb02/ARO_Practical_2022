@@ -430,9 +430,8 @@ class Simulation(Simulation_base):
                 self.jointTargetPos["LARM_JOINT5"] = -( self.getJointPos("CHEST_JOINT0") + self.getJointPos("LARM_JOINT0") )
                 self.jointTargetPos["RARM_JOINT5"] = -( self.getJointPos("CHEST_JOINT0") + self.getJointPos("RARM_JOINT0") )
             elif task == "task_32":
-                self.jointTargetPos["LARM_JOINT5"] = -( self.getJointPos("CHEST_JOINT0") + self.getJointPos("LARM_JOINT0") ) + np.pi
-                self.jointTargetPos["RARM_JOINT5"] = -( self.getJointPos("CHEST_JOINT0") + self.getJointPos("RARM_JOINT0") ) + np.pi
-
+                self.jointTargetPos["LARM_JOINT5"] = -( self.getJointPos("LARM_JOINT0") ) + np.pi
+                self.jointTargetPos["RARM_JOINT5"] = -( self.getJointPos("RARM_JOINT0") ) + np.pi
 
             self.tick()
             pltTime.append(n*self.dt)
@@ -445,8 +444,8 @@ class Simulation(Simulation_base):
                 break
         
         return pltTime, pltDistance
-        
 
+        
     def tick(self):
         """Ticks one step of simulation using PD control."""
         # Iterate through all joints and update joint states using PD control.
@@ -495,7 +494,7 @@ class Simulation(Simulation_base):
         time.sleep(self.dt)
 
     ########## Task 3: Robot Manipulation ##########
-    def cubic_interpolation(self, States, nTimes=100):
+    def cubic_interpolation(self, States, nTimes=1000):
         """
         Given a set of control points, return the
         cubic spline defined by the control points,
@@ -515,8 +514,9 @@ class Simulation(Simulation_base):
         for n in range(0,nTimes+1):
             EFStates.append([poly(dist)[0], poly(dist)[1], poly(dist)[2], poly(dist)[3], poly(dist)[4], poly(dist)[5]])
             dist += step
+            print(EFStates[n])
 
-        return EFStates
+        return np.array(EFStates)
 
     # Task 3.1 Pushing
     def dockingToPosition(self, leftTargetAngle, rightTargetAngle, angularSpeed=0.005,
