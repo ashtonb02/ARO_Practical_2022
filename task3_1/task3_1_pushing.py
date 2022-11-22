@@ -40,7 +40,7 @@ robotConfigs = {
     "robotPIDConfigs": core_path + "/PD_gains.yaml",
     "robotStartPos": [0, 0, 0.85],
     "robotStartOrientation": [0, 0, 0, 1],
-    "fixedBase": False,
+    "fixedBase": True,
     "colored": False
 }
 
@@ -86,11 +86,23 @@ def getReadyForTask():
         sim.tick()
         time.sleep(1./1000)
 
+    print(sim.getJointPosition("LARM_JOINT5"))
     return tableId, cubeId, targetId
 
 
 def solution():
-    pass
+    endEffector = "LARM_JOINT5"
+    targetstates = sim.cubic_interpolation(np.array([[0.37,0.23,1,0,1,0],
+                                                 [0.17,0.23,1,0,1,0],
+                                                 [0.5,0,1,0,1,0]]),300)
+
+    for s in targetstates:
+        tp = np.array([s[0],s[1],s[2]])
+        taro = np.array([s[3],s[4],s[5]])
+        print(sim.getJointPosition(endEffector))
+        print()
+        sim.move_without_PD(endEffector, targetPosition=tp, speed=0.01, orientation=taro, threshold=1e-2, maxIter=20, debug=False, verbose=False, task='task_31')
+
 
 tableId, cubeId, targetId = getReadyForTask()
 solution()
