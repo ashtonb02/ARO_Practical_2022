@@ -512,8 +512,9 @@ class Simulation(Simulation_base):
         dist = 0
 
         for n in range(0,nTimes+1):
-            EFStates.append([poly(dist)[0], poly(dist)[1], poly(dist)[2], poly(dist)[3], poly(dist)[4], poly(dist)[5]])
+            EFStates.append([poly(dist)[0], poly(dist)[1]])
             dist += step
+
             print(EFStates[n])
 
         return np.array(EFStates)
