@@ -91,15 +91,15 @@ def getReadyForTask():
 
 def solution():
     # TODO: Add your code here
-#    targetstatesL = sim.cubic_interpolation(np.array([[0.37,0.23,1.0,0,1,0],
-#                                                      [0.17,0.23,1.0,0,1,0],
-#                                                      [0.17,0,1.0,0,1,0],
-#                                                      [0.5,0,1.0,0,1,0]]))
+    targetstatesL = sim.cubic_interpolation(np.array([[0.37, 0.23, 0.9, 0,1,0],
+                                                      [0.21, 0.23, 0.9, 0,1,0],
+                                                      [0.22, 0.1,  0.9, 0,1,0],
+                                                      [0.5,  0.1,  0.9, 0,1,0]]))
 
-#    for s in targetstatesL:
-#        tp = np.array([s[0],s[1],s[2]])
-#        taro = np.array([s[3],s[4],s[5]])
-#        sim.move_with_PD("LARM_JOINT5", targetPosition=tp, speed=0.01, orientation=taro, threshold=1e-2, maxIter=100, debug=False, verbose=False,task = "default")
+    for s in targetstatesL:
+        tp = np.array([s[0],s[1],s[2]])
+        taro = np.array([s[3],s[4],s[5]])
+        sim.move_with_PD("LARM_JOINT5", targetPosition=tp, speed=0.01, orientation=taro, threshold=1e-2, maxIter=10, debug=False, verbose=False,task = "default")
 
 tableId, cubeId, targetId = getReadyForTask()
 solution()

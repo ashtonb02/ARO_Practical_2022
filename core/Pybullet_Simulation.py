@@ -445,7 +445,7 @@ class Simulation(Simulation_base):
         
         return pltTime, pltDistance
 
-        
+
     def tick(self):
         """Ticks one step of simulation using PD control."""
         # Iterate through all joints and update joint states using PD control.
@@ -494,7 +494,7 @@ class Simulation(Simulation_base):
         time.sleep(self.dt)
 
     ########## Task 3: Robot Manipulation ##########
-    def cubic_interpolation(self, States, nTimes=1000):
+    def cubic_interpolation(self, States, nTimes=100):
         """
         Given a set of control points, return the
         cubic spline defined by the control points,
