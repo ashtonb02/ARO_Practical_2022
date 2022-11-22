@@ -343,7 +343,7 @@ class Simulation(Simulation_base):
             u(t) - the manipulation signal
         """
         # COMPLETE: Add your code here
-        u = kp*(x_ref - x_real) - kd*(dx_real-dx_ref) + ki*integral
+        u = kp*(x_ref - x_real) + kd*(dx_ref-dx_real) + ki*integral
         return u
 
     # Task 2.2 Joint Manipulation
@@ -466,6 +466,7 @@ class Simulation(Simulation_base):
 
             ### Implement your code from here ... ###
             # TODO: obtain torque from PD controller
+            torque = 0
             torque = self.calculateTorque(self.jointTargetPos[joint], self.getJointPos(joint), 0,  (self.getJointPos(joint) - self.jointPositionOld[joint])/self.dt, 0, kp, ki, kd)
             ### ... to here ###
 

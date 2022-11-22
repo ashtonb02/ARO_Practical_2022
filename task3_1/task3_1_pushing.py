@@ -8,7 +8,7 @@ abs_path = os.path.dirname(os.path.realpath(__file__))
 root_path = abs_path + '/..'
 core_path = root_path + '/core'
 sys.path.append(core_path)
-from Pybullet_Simulation import Simulation #type: ignore
+from Pybullet_Simulation import Simulation
 
 # specific settings for this task
 
@@ -41,7 +41,7 @@ robotConfigs = {
     "robotStartPos": [0, 0, 0.85],
     "robotStartOrientation": [0, 0, 0, 1],
     "fixedBase": True,
-    "colored": False
+    "colored": True
 }
 
 sim = Simulation(pybulletConfigs, robotConfigs)
@@ -86,23 +86,16 @@ def getReadyForTask():
         sim.tick()
         time.sleep(1./1000)
 
-    print(sim.getJointPosition("LARM_JOINT5"))
     return tableId, cubeId, targetId
 
 
 def solution():
-    endEffector = "LARM_JOINT5"
-    targetstates = sim.cubic_interpolation(np.array([[0.37,0.23,1,0,1,0],
-                                                 [0.17,0.23,1,0,1,0],
-                                                 [0.5,0,1,0,1,0]]),300)
-
-    for s in targetstates:
-        tp = np.array([s[0],s[1],s[2]])
-        taro = np.array([s[3],s[4],s[5]])
-        print(sim.getJointPosition(endEffector))
-        print()
-        sim.move_without_PD(endEffector, targetPosition=tp, speed=0.01, orientation=taro, threshold=1e-2, maxIter=20, debug=False, verbose=False, task='task_31')
-
+    # TODO: Add your code here
+    print()
+    print(sim.getJointPosition("LARM_JOINT5"))
+    sim.move_with_PD("LARM_JOINT5", targetPosition=np.array([0.37,0.23,0.9]), speed=0.01, orientation=np.array([0,1,0]), threshold=1e-2, maxIter=300, debug=False, verbose=False,task = "task_31")
+    print()
+    print(sim.getJointPosition("LARM_JOINT5"))
 
 tableId, cubeId, targetId = getReadyForTask()
 solution()
