@@ -524,7 +524,7 @@ class Simulation(Simulation_base):
                                             np.array([0.58, -0.06, 0.94])],3000)
     
         for t in targetstates:
-            self.move_without_PD( endEffector, targetPosition=t, speed=0.01, orientation=np.array([1, 0, 0]), threshold=1e-3, maxIter=2, debug=False, verbose=False, task = "")
+            self.move_with_PD( endEffector, targetPosition=t, speed=0.01, orientation=np.array([1, 0, 0]), threshold=1e-3, maxIter=2, debug=False, verbose=False, task = "")
             print(self.getJointPosition(endEffector))
             print()
             print(self.getJointOrientation(endEffector))
@@ -551,7 +551,7 @@ class Simulation(Simulation_base):
             tpR = np.array([targetstatesR[s][0],targetstatesR[s][1],targetstatesR[s][2]])
             taro = np.array([1,0,0])
 
-            self.move_without_PD("LARM_JOINT5", targetPosition=tpL, speed=0.01, orientation=taro, threshold=1e-2, maxIter=2, debug=False, verbose=False, task='task_32')
-            self.move_without_PD("RARM_JOINT5", targetPosition=tpR, speed=0.01, orientation=taro, threshold=1e-2, maxIter=2, debug=False, verbose=False, task='task_32')
+            self.move_with_PD("LARM_JOINT5", targetPosition=tpL, speed=0.01, orientation=taro, threshold=1e-2, maxIter=2, debug=False, verbose=False, task='task_32')
+            self.move_with_PD("RARM_JOINT5", targetPosition=tpR, speed=0.01, orientation=taro, threshold=1e-2, maxIter=2, debug=False, verbose=False, task='task_32')
 
  ### END
