@@ -1,10 +1,3 @@
-# ===================================================================================
-# |    This file is auto generated according to the robot description               |
-# |    You should only modify the PID gains, while keep others unchanged            |
-# |    Remember to rename your final version of this file to "PD_gains.yaml"        |
-# ===================================================================================
-
-# Position Controllers (Torso) ---------------------------------------
 CHEST_JOINT0_position_controller:
   type: effort_controllers/JointPositionController
   joint: CHEST_JOINT0
@@ -13,11 +6,11 @@ CHEST_JOINT0_position_controller:
 HEAD_JOINT0_position_controller:
   type: effort_controllers/JointPositionController
   joint: HEAD_JOINT0
-  pid: {p: 1.0, i: 0.0, d: 0.2}
+  pid: {p: 1.0, i: 0.0, d: 0.5}
 HEAD_JOINT1_position_controller:
   type: effort_controllers/JointPositionController
   joint: HEAD_JOINT1
-  pid: {p: 11.0, i: 0.0, d: 0.7}
+  pid: {p: 11.0, i: 0.0, d: 5.5}
 # Position Controllers (Left arm) ---------------------------------------
 LARM_JOINT0_position_controller:
   type: effort_controllers/JointPositionController

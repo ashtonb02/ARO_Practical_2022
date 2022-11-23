@@ -40,8 +40,8 @@ robotConfigs = {
     "robotPIDConfigs": core_path + "/PD_gains.yaml",
     "robotStartPos": [0, 0, 0.85],
     "robotStartOrientation": [0, 0, 0, 1],
-    "fixedBase": False,
-    "colored": False
+    "fixedBase": True,
+    "colored": True
 }
 
 sim = Simulation(pybulletConfigs, robotConfigs)
@@ -101,6 +101,7 @@ def getReadyForTask():
 
 def solution():
     # TODO: Add your code here
+    sim.clamp(0, 0, angularSpeed=0.005, threshold=1e-1, maxIter=300, verbose=False)
     pass
 
 tableId, cubeId, targetId = getReadyForTask()

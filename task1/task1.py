@@ -66,28 +66,26 @@ def task32_pre():
                                                       [0.35,0.18,1,0,0,1]]),1000)
     for s in range(0, len(targetstatesL)):
         tpL = np.array([targetstatesL[s][0],targetstatesL[s][1],targetstatesL[s][2]])
-        taroL = np.array([targetstatesL[s][3],targetstatesL[s][4],targetstatesL[s][5]])
         tpR = np.array([targetstatesR[s][0],targetstatesR[s][1],targetstatesR[s][2]])
-        taroR = np.array([targetstatesR[s][3],targetstatesR[s][4],targetstatesR[s][5]])
+        taro = np.array([0,0,1])
 
-        sim.move_with_PD("LARM_JOINT5", targetPosition=tpL, speed=0.01, orientation=taroL, threshold=1e-2, maxIter=2, debug=False, verbose=False, task='task_32')
-        sim.move_with_PD("RARM_JOINT5", targetPosition=tpR, speed=0.01, orientation=taroR, threshold=1e-2, maxIter=2, debug=False, verbose=False, task='task_32')
+        sim.move_without_PD("LARM_JOINT5", targetPosition=tpL, speed=0.01, orientation=taro, threshold=1e-2, maxIter=2, debug=False, verbose=False, task='task_32')
+        sim.move_without_PD("RARM_JOINT5", targetPosition=tpR, speed=0.01, orientation=taro, threshold=1e-2, maxIter=2, debug=False, verbose=False, task='task_32')
 
 
 def task31_pre():
-    targetstatesL = sim.cubic_interpolation(np.array([[0.37,0.23,0.871,0,0,1],
-                                                      [0.17,0.23,0.871,0,0,1],
-                                                      [0.17,0,0.871,0,0,1],
-                                                      [0.5,0,0.871,0,0,1]]),1000)
+    targetstates = sim.cubic_interpolation([np.array([0.37, 0.23, 0.871]),
+                                            np.array([0.37, 0.23, 1.05]),
 
-    for s in targetstatesL:
+                                            np.array([0.37, -0.05, 1.05]),
+                                            np.array([0.37, -0.05, 0.98]),
+                                            np.array([0.30, -0.05, 0.98]),
+                                            np.array([0.6,  -0.05, 0.98])],1000)
+
+    for s in targetstates:
         tp = np.array([s[0],s[1],s[2]])
-        taro = np.array([s[3],s[4],s[5]])
-        sim.move_with_PD("LARM_JOINT5", targetPosition=tp, speed=0.01, orientation=taro, threshold=1e-2, maxIter=2, debug=False, verbose=False,task = "task_31")
-
-
-
-
+        taro = np.array([0,0,1])
+        sim.move_without_PD("LARM_JOINT5", targetPosition=tp, speed=0.01, orientation=taro, threshold=1e-3, maxIter=2, debug=False, verbose=False,task = "task_31")
 
 ref = [0, 0, 1]
 sim = Simulation(pybulletConfigs, robotConfigs, refVect=ref)
@@ -95,9 +93,8 @@ sim = Simulation(pybulletConfigs, robotConfigs, refVect=ref)
 endEffector = "LARM_JOINT5"
   # x,y,z coordinates in world frame
 # Example code. Feel free to modify
-#task32_pre()
-pltTime, pltEFPosition = sim.move_without_PD(endEffector, targetPosition = np.array([0.37, 0.23, 1.06]), speed=0.01, orientation=np.array([0,0,1]), threshold=1e-2, maxIter=100, debug=False, verbose=False)
-
+task31_pre()
+pltTime, pltEFPosition = sim.move_without_PD(endEffector, targetPosition = np.array([0.6, 0, 1.06]), speed=0.01, orientation=np.array([0,1,0]), threshold=1e-2, maxIter=100, debug=False, verbose=False,task = "task_31")
 # Now plot some graphs
 task1_figure_name = "task1_kinematics.png"
 task1_savefig = True

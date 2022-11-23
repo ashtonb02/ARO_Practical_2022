@@ -56,55 +56,56 @@ task2_savefig = True
 ### to here
 
 endEffector = "LARM_JOINT5"
-targetPosition = np.array([0.37, 0.23, 1.06385])
+targetPosition = np.array([0.6, 0.3, 1.06])
 
-pltTime, pltEFPosition = sim.move_with_PD(endEffector, targetPosition, speed=0.01, orientation=[0,1,0], threshold=1e-3, maxIter=1000, debug=False, verbose=False)
-
+#pltTime, pltEFPosition = sim.move_with_PD(endEffector, targetPosition, speed=0.01, orientation=np.array([0,1,0]), threshold=1e-3, maxIter=100, debug=False, verbose=False, task="task_31")
+#print(sim.getJointPosition(endEffector))
+#print()
+#print(sim.getJointOrientation(endEffector))
 task2_figure_name = "TASK2_KINEMATICS.png"
 
 # ...
-fig = plt.figure(figsize=(6, 4))
+#fig = plt.figure(figsize=(6, 4))
 
-plt.plot(pltTime, pltEFPosition, color='blue')
-plt.xlabel("Time s")
-plt.ylabel("Distance to target position")
-
-plt.suptitle("task2 IK with PD", size=16)
-plt.tight_layout()
-plt.subplots_adjust(left=0.15)
-
-#if task2_savefig:
-#    fig.savefig(task2_figure_name)
-plt.show()
-
-
-#pltTime, pltTarget, pltTorque, pltTorqueTime, pltPosition, pltVelocity = \
-#    sim.moveJoint(
-#        task2_jointName, task2_targetPosition, task2_targetVelocity, verbose)
-
-
-#modify the code in below if needed
-#fig = plt.figure(figsize=(6, 8))
-
-#plt.subplot(311)
-#plt.plot(pltTime, pltPosition, color='blue')
-#plt.plot(pltTime, pltTarget, color='magenta')
-#plt.ylabel("Theta rads")
-
-#plt.subplot(312)
-#plt.plot(pltTime, pltPosition, color='blue')
-#plt.plot(pltTime, pltVelocity, color='lightblue')
-#plt.ylabel("Velocity rads/s")
-
-#plt.subplot(313)
-#plt.plot(pltTorqueTime, pltTorque, color='orange')
+#plt.plot(pltTime, pltEFPosition, color='blue')
 #plt.xlabel("Time s")
-#plt.ylabel("Torque N")
+#plt.ylabel("Distance to target position")
 
-#plt.suptitle("Task2.2 Response of the controller", size=16)
+#plt.suptitle("task2 IK with PD", size=16)
 #plt.tight_layout()
 #plt.subplots_adjust(left=0.15)
 
 #if task2_savefig:
-#   fig.savefig(task2_figure_name)
+#    fig.savefig(task2_figure_name)
 #plt.show()
+
+
+pltTime, pltTarget, pltTorque, pltTorqueTime, pltPosition, pltVelocity = \
+    sim.moveJoint(
+        task2_jointName, task2_targetPosition, task2_targetVelocity, verbose)
+
+
+#modify the code in below if needed
+fig = plt.figure(figsize=(6, 8))
+plt.subplot(311)
+plt.plot(pltTime, pltPosition, color='blue')
+plt.plot(pltTime, pltTarget, color='magenta')
+plt.ylabel("Theta rads")
+
+plt.subplot(312)
+plt.plot(pltTime, pltPosition, color='blue')#
+plt.plot(pltTime, pltVelocity, color='lightblue')
+plt.ylabel("Velocity rads/s")
+
+plt.subplot(313)
+plt.plot(pltTorqueTime, pltTorque, color='orange')
+plt.xlabel("Time s")
+plt.ylabel("Torque N")
+plt.suptitle("Task2.2 Response of the controller", size=16)
+plt.tight_layout()
+plt.subplots_adjust(left=0.15)
+
+
+if task2_savefig:
+   fig.savefig(task2_figure_name)
+plt.show()
