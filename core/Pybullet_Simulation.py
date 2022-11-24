@@ -543,10 +543,10 @@ class Simulation(Simulation_base):
                                                         np.array([0.21, -0.04, 1.05])],100)
 
         targetstatesLowering = self.cubic_interpolation([np.array([0.21, -0.04, 1.05]),
-                                                         np.array([0.21, -0.04, 0.92])],100)
+                                                         np.array([0.21, -0.04, 0.94])],100)
 
-        targetstatesPushing = self.cubic_interpolation([np.array([0.21, -0.04, 0.92]),
-                                                        np.array([0.58, -0.04, 0.92])],100)
+        targetstatesPushing = self.cubic_interpolation([np.array([0.21, -0.04, 0.94]),
+                                                        np.array([0.6, -0.04, 0.94])],100)
 
                           
         targetstates = np.concatenate((targetstatesDocking, targetstatesLowering,targetstatesPushing))
