@@ -293,6 +293,12 @@ class Simulation(Simulation_base):
                 self.jointTargetPos[joints[j]] = angles[n+1][j]
                 self.jointPositionOld[joints[j]] = angles[n][j]
 
+            if task == "task_31":
+                self.jointTargetPos["LARM_JOINT5"] = -( self.getJointPos("CHEST_JOINT0") + self.getJointPos("LARM_JOINT0") )
+                self.jointTargetPos["RARM_JOINT5"] = -( self.getJointPos("CHEST_JOINT0") + self.getJointPos("RARM_JOINT0") )
+            elif task == "task_32":
+                self.jointTargetPos["LARM_JOINT5"] = -( self.getJointPos("LARM_JOINT0") ) + np.pi
+                self.jointTargetPos["RARM_JOINT5"] = -( self.getJointPos("RARM_JOINT0") ) + np.pi
 
             self.tick_without_PD()
             
@@ -414,12 +420,13 @@ class Simulation(Simulation_base):
                 self.jointTargetPos[joints[j]] = angles[n+1][j]
                 self.jointPositionOld[joints[j]] = angles[n][j]
 
-            #if task == "task_31":
-            #    self.jointTargetPos["LARM_JOINT5"] = -( self.getJointPos("CHEST_JOINT0") + self.getJointPos("LARM_JOINT0") )
-            #    self.jointTargetPos["RARM_JOINT5"] = -( self.getJointPos("CHEST_JOINT0") + self.getJointPos("RARM_JOINT0") )
-            #elif task == "task_32":
-            #    self.jointTargetPos["LARM_JOINT5"] = -( self.getJointPos("LARM_JOINT0") ) + np.pi
-            #    self.jointTargetPos["RARM_JOINT5"] = -( self.getJointPos("RARM_JOINT0") ) + np.pi
+            if task == "task_31":
+                
+                self.jointTargetPos["LARM_JOINT5"] = -( self.getJointPos("CHEST_JOINT0") + self.getJointPos("LARM_JOINT0") )
+                self.jointTargetPos["RARM_JOINT5"] = -( self.getJointPos("CHEST_JOINT0") + self.getJointPos("RARM_JOINT0") )
+            elif task == "task_32":
+                self.jointTargetPos["LARM_JOINT5"] = -( self.getJointPos("LARM_JOINT0") ) + np.pi
+                self.jointTargetPos["RARM_JOINT5"] = -( self.getJointPos("RARM_JOINT0") ) + np.pi
 
             self.tick()
 
@@ -558,7 +565,7 @@ class Simulation(Simulation_base):
         time.sleep(10)
 
     # Task 3.2 Grasping & Docking
-    def clamp(self, leftTargetAngle, rightTargetAngle, angularSpeed=0.005, threshold=1e-1, maxIter=300, verbose=False):
+    def clampWithPD(self, leftTargetAngle, rightTargetAngle, angularSpeed=0.005, threshold=1e-1, maxIter=300, verbose=False):
         """A template function for you, you are free to use anything else"""
         # TODO: Append your code here0
 
@@ -580,4 +587,48 @@ class Simulation(Simulation_base):
             self.move_with_PD("LARM_JOINT5", targetPosition=tpL, speed=0.01, orientation=taro, threshold=1e-2, maxIter=2, debug=False, verbose=False, task='task_32')
             self.move_with_PD("RARM_JOINT5", targetPosition=tpR, speed=0.01, orientation=taro, threshold=1e-2, maxIter=2, debug=False, verbose=False, task='task_32')
 
+    def clampWithoutPD(self, leftTargetAngle, rightTargetAngle, angularSpeed=0.005, threshold=1e-1, maxIter=300, verbose=False):
+        """A template function for you, you are free to use anything else"""
+        # TODO: Append your code here0
+
+        targetstatesDockingL = self.cubic_interpolation(np.array([[0.53, 0.23, 1.1],
+                                                                  [0.53, 0.23,  1.07],
+                                                                  [0.53, 0.15,  1.07]]),100)
+        
+        targetstatesLiftingL =  self.cubic_interpolation(np.array([[0.53, 0.15,  1.07],
+                                                                   [0.53, 0.15,  1.25]]),100)
+        
+        targetstatesRotatingL =  self.cubic_interpolation(np.array([[0.53, 0.155,  1.25],
+                                                                    [0.27, 0.48,   1.25]]),100)
+        
+        targetstatesLoweringL =  self.cubic_interpolation(np.array([[0.27,  0.48,   1.25],
+                                                                    [0.27,  0.48,   1.07]]),100)
+
+        targetstatesDockingR =  self.cubic_interpolation(np.array([[0.53, -0.23, 1.1],
+                                                                   [0.53, -0.23,  1.07],
+                                                                   [0.53, -0.15,  1.07]]),100)
+        
+        targetstatesLiftingR =  self.cubic_interpolation(np.array([[0.53, -0.15,  1.07],
+                                                                   [0.53, -0.15,  1.25]]),100)
+
+        targetstatesRotatingR =  self.cubic_interpolation(np.array([[0.53, -0.15,  1.25],
+                                                                    [0.48,  0.27,   1.25]]),100)
+        
+        targetstatesLoweringR =  self.cubic_interpolation(np.array([[0.48,  0.27,   1.25],
+                                                                    [0.48,  0.27,   1.07]]),100)
+
+
+
+        targetstatesL = np.concatenate((targetstatesDockingL,targetstatesLiftingL,targetstatesRotatingL, targetstatesLoweringL))
+        targetstatesR = np.concatenate((targetstatesDockingR,targetstatesLiftingR,targetstatesRotatingR, targetstatesLoweringR))                                                     
+
+        for s in range(0, len(targetstatesL)):
+            tpL = np.array([targetstatesL[s][0],targetstatesL[s][1],targetstatesL[s][2]])
+            tpR = np.array([targetstatesR[s][0],targetstatesR[s][1],targetstatesR[s][2]])
+            taro = np.array([0,0,1])
+
+            self.move_without_PD("LARM_JOINT5", targetPosition=tpL, speed=0.01, orientation=taro, threshold=1e-2, maxIter=2, debug=False, verbose=False, task='task_32')
+            self.move_without_PD("RARM_JOINT5", targetPosition=tpR, speed=0.01, orientation=taro, threshold=1e-2, maxIter=2, debug=False, verbose=False, task='task_32')
+
+        time.sleep(100)
  ### END
