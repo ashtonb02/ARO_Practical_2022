@@ -92,7 +92,7 @@ def getReadyForTask():
 def solution():
     # TODO: Add your code here
     #sim.dockingToPositionWithPD(0, 0, angularSpeed=1.0, threshold=1e-1, maxIter=500, verbose=False)
-    sim.dockingToPositionWithoutPD(0, 0, angularSpeed=1.0, threshold=1e-1, maxIter=500, verbose=False)
+    sim.dockingToPositionWithPD(0, 0, angularSpeed=1.0, threshold=1e-1, maxIter=500, verbose=False)
   
 
     time.sleep(10)
