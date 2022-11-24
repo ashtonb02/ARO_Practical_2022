@@ -58,55 +58,55 @@ task2_savefig = True
 endEffector = "LARM_JOINT5"
 targetPosition = np.array([0.21, -0.07, 1.05])
 
-#pltTime, pltEFPosition = sim.move_with_PD(endEffector, targetPosition, speed=0.001, orientation=np.array([1,0,0]), threshold=1e-3, maxIter=500, debug=True, verbose=False, task="default")
+pltTime, pltEFPosition = sim.move_with_PD(endEffector, targetPosition, speed=0.001, orientation=np.array([1,0,0]), threshold=1e-3, maxIter=500, debug=True, verbose=False, task="default")
 #print(sim.getJointPosition(endEffector))
 #print()
 #print(sim.getJointOrientation(endEffector))
-#task2_figure_name = "TASK2_KINEMATICS.png"
+Task2_figure_name = "TASK2_KINEMATICS.png"
 
 # ...
-#fig = plt.figure(figsize=(6, 4))
+fig = plt.figure(figsize=(6, 4))
 
 
-#plt.plot(pltTime, pltEFPosition, color='blue')
-#plt.xlabel("Time s")
-#plt.ylabel("Distance to target position")
+plt.plot(pltTime, pltEFPosition, color='blue')
+plt.xlabel("Time s")
+plt.ylabel("Distance to target position")
 
-#plt.suptitle("task2 IK with PD", size=16)
-#plt.tight_layout()
-#plt.subplots_adjust(left=0.15)
+plt.suptitle("task2 IK with PD", size=16)
+plt.tight_layout()
+plt.subplots_adjust(left=0.15)
 
 #if task2_savefig:
 #    fig.savefig(task2_figure_name)
-#plt.show()
+plt.show()
 
 
-pltTime, pltTarget, pltTorque, pltTorqueTime, pltPosition, pltVelocity = \
-    sim.moveJoint(
-        task2_jointName, task2_targetPosition, task2_targetVelocity, verbose)
+#pltTime, pltTarget, pltTorque, pltTorqueTime, pltPosition, pltVelocity = \
+#    sim.moveJoint(
+#        task2_jointName, task2_targetPosition, task2_targetVelocity, verbose)
 
 
 #modify the code in below if needed
-fig = plt.figure(figsize=(6, 8))
-plt.subplot(311)
-plt.plot(pltTime, pltPosition, color='blue')
-plt.plot(pltTime, pltTarget, color='magenta')
-plt.ylabel("Theta rads")
+#fig = plt.figure(figsize=(6, 8))
+#plt.subplot(311)
+#plt.plot(pltTime, pltPosition, color='blue')
+#plt.plot(pltTime, pltTarget, color='magenta')
+#plt.ylabel("Theta rads")
 
-plt.subplot(312)
-plt.plot(pltTime, pltPosition, color='blue')
-plt.plot(pltTime, pltVelocity, color='lightblue')
-plt.ylabel("Velocity rads/s")
+#plt.subplot(312)
+#plt.plot(pltTime, pltPosition, color='blue')
+#plt.plot(pltTime, pltVelocity, color='lightblue')
+#plt.ylabel("Velocity rads/s")
 
-plt.subplot(313)
-plt.plot(pltTorqueTime, pltTorque, color='orange')
-plt.xlabel("Time s")
-plt.ylabel("Torque N")
-plt.suptitle("Task2.2 Response of the controller", size=16)
-plt.tight_layout()
-plt.subplots_adjust(left=0.15)
+#plt.subplot(313)
+#plt.plot(pltTorqueTime, pltTorque, color='orange')
+#plt.xlabel("Time s")
+#plt.ylabel("Torque N")
+#plt.suptitle("Task2.2 Response of the controller", size=16)
+#plt.tight_layout()
+#plt.subplots_adjust(left=0.15)
 
 
 #if task2_savefig:
 #   fig.savefig(task2_figure_name)
-plt.show()
+#plt.show()
