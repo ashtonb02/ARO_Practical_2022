@@ -76,11 +76,10 @@ def task32_pre():
 def task31_pre():
     targetstates = sim.cubic_interpolation([np.array([0.37, 0.23, 0.871]),
                                             np.array([0.37, 0.23, 1.05]),
-
-                                            np.array([0.37, -0.05, 1.05]),
-                                            np.array([0.37, -0.05, 0.98]),
-                                            np.array([0.30, -0.05, 0.98]),
-                                            np.array([0.6,  -0.05, 0.98])],1000)
+                                            np.array([0.37, 0.06, 1.05]),
+                                            np.array([0.21, 0.06, 1.05]),
+                                            np.array([0.21, 0.06, 0.94]),
+                                            np.array([0.58, 0.06, 0.94])],1000)
 
     for s in targetstates:
         tp = np.array([s[0],s[1],s[2]])

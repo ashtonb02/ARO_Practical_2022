@@ -111,7 +111,6 @@ class Simulation(Simulation_base):
 
         for jointName in moveableJoints:
             RotMat = self.getJointRotationalMatrix(jointName, theta=self.jointTargetPos[jointName])
-
             Trans = self.frameTranslationFromParent[jointName]
 
             TransMat = np.array([[RotMat[0,0],RotMat[0,1],RotMat[0,2],Trans[0]],
@@ -343,7 +342,7 @@ class Simulation(Simulation_base):
             u(t) - the manipulation signal
         """
         # COMPLETE: Add your code here
-        u = kp*(x_ref - x_real) + kd*(dx_real - dx_ref) + ki*integral
+        u = kp*(x_ref - x_real) + kd*(dx_ref-dx_real) + ki*integral
         return u
 
     # Task 2.2 Joint Manipulation
@@ -404,7 +403,7 @@ class Simulation(Simulation_base):
         Return:
             pltTime, pltDistance arrays used for plotting
         """
-        #TODO add your code here
+        #COMPLETE: add your code here
         # Iterate through joints and use states from IK solver as reference states in PD controller.
         # Perform iterations to track reference states using PD controller until reaching
         # max iterations or position threshold.elf.jointTargetPos["CHEST_JOINT0"] = 
@@ -515,19 +514,22 @@ class Simulation(Simulation_base):
             threshold=1e-1, maxIter=300, verbose=False):
         """A template function for you, you are free to use anything else"""
         # TODO: Append your code here
-        endEffector = "LARM_JOINT5"
-        targetstates = self.cubic_interpolation([np.array([0.37, 0.23, 0.871]),
-                                            np.array([0.37, 0.23, 1.05]),
-                                            np.array([0.37, -0.06, 1.05]),
-                                            np.array([0.21, -0.06, 1.05]),
-                                            np.array([0.21, -0.06, 0.94]),
-                                            np.array([0.58, -0.06, 0.94])],3000)
-    
-        for t in targetstates:
-            self.move_with_PD( endEffector, targetPosition=t, speed=0.01, orientation=np.array([1, 0, 0]), threshold=1e-3, maxIter=2, debug=False, verbose=False, task = "")
-            print(self.getJointPosition(endEffector))
-            print()
-            print(self.getJointOrientation(endEffector))
+        targetstatesDocking = self.cubic_interpolation([np.array([0.37, 0.23, 0.871]),
+                                                        np.array([0.37, 0.23, 1.05]),
+                                                        np.array([0.37, -0.07, 1.05]),
+                                                        np.array([0.21, -0.07, 1.05])],100)
+        
+        targetstatesLowering = self.cubic_interpolation([np.array([0.21, -0.07, 1.05]),
+                                                         np.array([0.21, -0.07, 0.94])],100)
+        
+        targetstatesPushing = self.cubic_interpolation([np.array([0.21, -0.07, 0.94]),
+                                                        np.array([0.58, -0.07, 0.94])],100)
+                                        
+        targetstates = np.concatenate((targetstatesDocking, targetstatesLowering,targetstatesPushing))
+        for s in targetstates:
+            tp = np.array([s[0],s[1],s[2]])
+            taro = np.array([1,0,0])
+            self.move_without_PD("LARM_JOINT5", targetPosition=tp, speed=0.01, orientation=taro, threshold=1e-3, maxIter=3, debug=False, verbose=False,task = "task_31")
             
         time.sleep(10)
 
@@ -549,9 +551,9 @@ class Simulation(Simulation_base):
         for s in range(0, len(targetstatesL)):
             tpL = np.array([targetstatesL[s][0],targetstatesL[s][1],targetstatesL[s][2]])
             tpR = np.array([targetstatesR[s][0],targetstatesR[s][1],targetstatesR[s][2]])
-            taro = np.array([1,0,0])
+            taro = np.array([-1,0,0])
 
-            self.move_with_PD("LARM_JOINT5", targetPosition=tpL, speed=0.01, orientation=taro, threshold=1e-2, maxIter=2, debug=False, verbose=False, task='task_32')
-            self.move_with_PD("RARM_JOINT5", targetPosition=tpR, speed=0.01, orientation=taro, threshold=1e-2, maxIter=2, debug=False, verbose=False, task='task_32')
+            self.move_without_PD("LARM_JOINT5", targetPosition=tpL, speed=0.01, orientation=taro, threshold=1e-2, maxIter=2, debug=False, verbose=False, task='task_32')
+            self.move_without_PD("RARM_JOINT5", targetPosition=tpR, speed=0.01, orientation=taro, threshold=1e-2, maxIter=2, debug=False, verbose=False, task='task_32')
 
  ### END
