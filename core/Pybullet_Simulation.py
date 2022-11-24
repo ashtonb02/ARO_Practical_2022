@@ -409,24 +409,24 @@ class Simulation(Simulation_base):
 
         joints = self.getEndEffPath(endEffector)
         angles = self.inverseKinematics(endEffector, targetPosition, orientation, maxIter, threshold)
-        
         for n in range(0, len(angles)-1):
             for j in range(0,len(joints)): 
                 self.jointTargetPos[joints[j]] = angles[n+1][j]
                 self.jointPositionOld[joints[j]] = angles[n][j]
 
-            if task == "task_31":
-                self.jointTargetPos["LARM_JOINT5"] = -( self.getJointPos("CHEST_JOINT0") + self.getJointPos("LARM_JOINT0") )
-                self.jointTargetPos["RARM_JOINT5"] = -( self.getJointPos("CHEST_JOINT0") + self.getJointPos("RARM_JOINT0") )
-            elif task == "task_32":
-                self.jointTargetPos["LARM_JOINT5"] = -( self.getJointPos("LARM_JOINT0") ) + np.pi
-                self.jointTargetPos["RARM_JOINT5"] = -( self.getJointPos("RARM_JOINT0") ) + np.pi
+            #if task == "task_31":
+            #    self.jointTargetPos["LARM_JOINT5"] = -( self.getJointPos("CHEST_JOINT0") + self.getJointPos("LARM_JOINT0") )
+            #    self.jointTargetPos["RARM_JOINT5"] = -( self.getJointPos("CHEST_JOINT0") + self.getJointPos("RARM_JOINT0") )
+            #elif task == "task_32":
+            #    self.jointTargetPos["LARM_JOINT5"] = -( self.getJointPos("LARM_JOINT0") ) + np.pi
+            #    self.jointTargetPos["RARM_JOINT5"] = -( self.getJointPos("RARM_JOINT0") ) + np.pi
 
             self.tick()
-            pltTime.append(n*self.dt)
+
             tp = np.transpose(np.array([targetPosition]))
             efp = self.getJointPosition(endEffector)
 
+            pltTime.append(n*self.dt)
             pltDistance.append(np.linalg.norm(efp-tp))
 
             if np.linalg.norm((tp - efp)) < threshold:
@@ -506,26 +506,29 @@ class Simulation(Simulation_base):
         return np.array(EFStates)
 
     # Task 3.1 Pushing
-    def dockingToPosition(self, leftTargetAngle, rightTargetAngle, angularSpeed=0.005,
+    def dockingToPosition(self, leftTargetAngle, rightTargetAngle, angularSpeed=1.0,
             threshold=1e-1, maxIter=300, verbose=False):
         """A template function for you, you are free to use anything else"""
         # TODO: Append your code here
+
+        self.move_with_PD('RARM_JOINT5', [0.37, -0.23, 1.05], speed=1.0, orientation=[1,0,0], threshold=1e-1, maxIter=1000, debug=False, verbose=False, task='default')
         targetstatesDocking = self.cubic_interpolation([np.array([0.37, 0.23, 0.871]),
                                                         np.array([0.37, 0.23, 1.05]),
-                                                        np.array([0.37, -0.05, 1.05]),
-                                                        np.array([0.21, -0.05, 1.0])],100)
+                                                        np.array([0.37, -0.05, 1.1]),
+                                                        np.array([0.21, -0.045, 1.1])],5)
         
-        targetstatesLowering = self.cubic_interpolation([np.array([0.21, -0.05, 1.0]),
-                                                         np.array([0.21, -0.05, 0.92])],100)
+        targetstatesLowering = self.cubic_interpolation([np.array([0.21, -0.045, 1.1]),
+                                                         np.array([0.21, -0.045, 0.96])],2)
         
-        targetstatesPushing = self.cubic_interpolation([np.array([0.21, -0.05, 0.92]),
-                                                        np.array([0.58, -0.05, 0.92])],100)
+        targetstatesPushing = self.cubic_interpolation([np.array([0.21, -0.045, 0.96]),
+                                                        np.array([0.58, -0.045, 0.96])],5)
 
                           
         targetstates = np.concatenate((targetstatesDocking, targetstatesLowering,targetstatesPushing))
         for s in targetstates:
-            tp = np.array([s[0],s[1],s[2]])
-            self.move_with_PD("LARM_JOINT5", targetPosition=tp, speed=0.000001, orientation=[1,0,0], threshold=1e-3, maxIter=2, debug=True, verbose=False,task = "task_31")
+            tp = np.array(s)
+            taro = [1,0,0]
+            self.move_with_PD("LARM_JOINT5", targetPosition=tp, speed=1.0, orientation=taro, threshold=1e-3, maxIter=500, debug=False, verbose=False,task = "default")
             
         time.sleep(10)
 
@@ -538,12 +541,12 @@ class Simulation(Simulation_base):
                                                       [0.37,0.1,1.05],
                                                       [0.37,0.1,1.05],
                                                       [0.43,0.275,1.05],
-                                                      [0.35,0.38,1]]),1000)
+                                                      [0.35,0.38,1]]),5)
 
         targetstatesR = self.cubic_interpolation(np.array([[0.37,-0.23,0.871],
                                                       [0.40,0.1,1.05],
                                                       [0.43,0.075,1.05],
-                                                      [0.35,0.18,1.05] ]),1000)
+                                                      [0.35,0.18,1.05] ]),5)
         for s in range(0, len(targetstatesL)):
             tpL = np.array([targetstatesL[s][0],targetstatesL[s][1],targetstatesL[s][2]])
             tpR = np.array([targetstatesR[s][0],targetstatesR[s][1],targetstatesR[s][2]])

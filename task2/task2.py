@@ -46,8 +46,9 @@ robotConfigs = {
 }
 sim = Simulation(pybulletConfigs, robotConfigs)
 
-# This is an example target (angular) position for the joint LARM_JOINT2
-task2_jointName = "HEAD_JOINT0"
+# This is an example target (a
+# ngular) position for the joint LARM_JOINT2
+task2_jointName = "LARM_JOINT5"
 task2_targetPosition = np.deg2rad(45)  # joint (angular) position in radians
 task2_targetVelocity = 0.0  # joint (angular) velocity in radians per second
 verbose = False
@@ -55,14 +56,14 @@ task2_figure_name = "task2_PD_response.png"
 task2_savefig = True
 ### to here
 
-endEffector = "LARM_JOINT5"
-targetPosition = np.array([0.21, -0.07, 1.05])
+endEffector = "RARM_JOINT5"
+targetPosition = np.array([0.37, -0.23, 1.1])
 
-pltTime, pltEFPosition = sim.move_with_PD(endEffector, targetPosition, speed=0.001, orientation=np.array([1,0,0]), threshold=1e-3, maxIter=500, debug=True, verbose=False, task="default")
+pltTime, pltEFPosition = sim.move_with_PD(endEffector, targetPosition, speed=0.01, orientation=np.array([0,1,0]), threshold=1e-3, maxIter=1000, debug=True, verbose=False, task="default")
 #print(sim.getJointPosition(endEffector))
 #print()
 #print(sim.getJointOrientation(endEffector))
-Task2_figure_name = "TASK2_KINEMATICS.png"
+#Task2_figure_name = "LARM_JOINT5.png"
 
 # ...
 fig = plt.figure(figsize=(6, 4))

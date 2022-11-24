@@ -91,9 +91,15 @@ def getReadyForTask():
 
 def solution():
     # TODO: Add your code here
-    sim.dockingToPosition(0, 0, angularSpeed=0.005, threshold=1e-1, maxIter=500, verbose=False)
+    sim.dockingToPosition(0, 0, angularSpeed=1.0, threshold=1e-1, maxIter=500, verbose=False)
+    #sim.move_with_PD('LARM_JOINT5', [0.37, 0.23, 1.06], speed=0.01, orientation=np.array([1,0,0]), threshold=1e-3, maxIter=1000, debug=True, verbose=False, task="default")
+    #sim.move_with_PD('LARM_JOINT5', [0.37, -0.05, 1.06], speed=0.01, orientation=np.array([1,0,0]), threshold=1e-3, maxIter=1000, debug=True, verbose=False, task="default")
+    #sim.move_with_PD('LARM_JOINT5', [0.15, -0.045, 1.06], speed=0.01, orientation=np.array([1,0,0]), threshold=1e-3, maxIter=1000, debug=True, verbose=False, task="default")
+    #sim.move_with_PD('LARM_JOINT5', [0.15, -0.045, 0.96], speed=0.01, orientation=np.array([1,0,0]), threshold=1e-3, maxIter=1000, debug=True, verbose=False, task="default")
+    #sim.move_with_PD('LARM_JOINT5', [0.42, -0.04, 0.96], speed=0.01, orientation=np.array([1,0,0]), threshold=1e-3, maxIter=1000, debug=True, verbose=False, task="default")
+    #sim.move_with_PD('LARM_JOINT5', [0.42, -0.04, 0.96], speed=0.01, orientation=np.array([1,0,0]), threshold=1e-3, maxIter=1000, debug=True, verbose=False, task="default")
 
-
+    time.sleep(10)
 
 tableId, cubeId, targetId = getReadyForTask()
 solution()
