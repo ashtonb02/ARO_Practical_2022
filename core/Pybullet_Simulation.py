@@ -8,6 +8,7 @@ from scipy.spatial.transform import Rotation as npRotation
 from scipy.special import comb
 from scipy.interpolate import CubicSpline
 import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import axes3d
 import numpy as np
 import math
 import re
@@ -245,7 +246,8 @@ class Simulation(Simulation_base):
         angularTraj = []
         joints = self.getEndEffPath(endEffector)
         EFpos = self.getJointPosition(endEffector).flatten()
-        EForientation = self.getJointOrientation(endEffector)
+
+        EForientation = orientation
         EFstate = np.append(EFpos,EForientation)
 
         targetState = np.append(targetPosition, orientation)
@@ -291,12 +293,6 @@ class Simulation(Simulation_base):
                 self.jointTargetPos[joints[j]] = angles[n+1][j]
                 self.jointPositionOld[joints[j]] = angles[n][j]
 
-            if task == "task_31":
-                self.jointTargetPos["LARM_JOINT5"] = -( self.getJointPos("CHEST_JOINT0") + self.getJointPos("LARM_JOINT0"))
-                self.jointTargetPos["RARM_JOINT5"] = -( self.getJointPos("CHEST_JOINT0") + self.getJointPos("RARM_JOINT0"))
-            elif task == "task_32":
-                self.jointTargetPos["LARM_JOINT5"] = -(self.getJointPos("LARM_JOINT0")) + np.pi
-                self.jointTargetPos["RARM_JOINT5"] = -(self.getJointPos("RARM_JOINT0")) + np.pi
 
             self.tick_without_PD()
             
@@ -395,7 +391,7 @@ class Simulation(Simulation_base):
 
         return pltTime, pltTarget, pltTorque, pltTorqueTime, pltPosition, pltVelocity
 
-    def move_with_PD(self, endEffector, targetPosition, speed=0.01, orientation=None,
+    def move_with_PD(self, endEffector, targetPosition, speed=0.0001, orientation=None,
         threshold=1e-3, maxIter=3000, debug=False, verbose=False, task='default'):
         """
         Move joints using inverse kinematics solver and using PD control.
@@ -516,20 +512,20 @@ class Simulation(Simulation_base):
         # TODO: Append your code here
         targetstatesDocking = self.cubic_interpolation([np.array([0.37, 0.23, 0.871]),
                                                         np.array([0.37, 0.23, 1.05]),
-                                                        np.array([0.37, -0.07, 1.05]),
-                                                        np.array([0.21, -0.07, 1.05])],100)
+                                                        np.array([0.37, -0.05, 1.05]),
+                                                        np.array([0.21, -0.05, 1.0])],100)
         
-        targetstatesLowering = self.cubic_interpolation([np.array([0.21, -0.07, 1.05]),
-                                                         np.array([0.21, -0.07, 0.94])],100)
+        targetstatesLowering = self.cubic_interpolation([np.array([0.21, -0.05, 1.0]),
+                                                         np.array([0.21, -0.05, 0.92])],100)
         
-        targetstatesPushing = self.cubic_interpolation([np.array([0.21, -0.07, 0.94]),
-                                                        np.array([0.58, -0.07, 0.94])],100)
-                                        
+        targetstatesPushing = self.cubic_interpolation([np.array([0.21, -0.05, 0.92]),
+                                                        np.array([0.58, -0.05, 0.92])],100)
+
+                          
         targetstates = np.concatenate((targetstatesDocking, targetstatesLowering,targetstatesPushing))
         for s in targetstates:
             tp = np.array([s[0],s[1],s[2]])
-            taro = np.array([1,0,0])
-            self.move_without_PD("LARM_JOINT5", targetPosition=tp, speed=0.01, orientation=taro, threshold=1e-3, maxIter=3, debug=False, verbose=False,task = "task_31")
+            self.move_with_PD("LARM_JOINT5", targetPosition=tp, speed=0.000001, orientation=[1,0,0], threshold=1e-3, maxIter=2, debug=True, verbose=False,task = "task_31")
             
         time.sleep(10)
 

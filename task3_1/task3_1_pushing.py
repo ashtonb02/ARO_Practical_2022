@@ -91,7 +91,7 @@ def getReadyForTask():
 
 def solution():
     # TODO: Add your code here
-    sim.dockingToPosition(0, 0, angularSpeed=0.005, threshold=1e-1, maxIter=300, verbose=False)
+    sim.dockingToPosition(0, 0, angularSpeed=0.005, threshold=1e-1, maxIter=500, verbose=False)
 
 
 tableId, cubeId, targetId = getReadyForTask()
