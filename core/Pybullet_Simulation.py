@@ -536,25 +536,24 @@ class Simulation(Simulation_base):
             threshold=1e-1, maxIter=300, verbose=False):
         """A template function for you, you are free to use anything else"""
         # TODO: Append your code here
-
-        self.move_without_PD('RARM_JOINT5', [0.37, -0.23, 1.05], speed=1.0, orientation=[1,0,0], threshold=1e-1, maxIter=1000, debug=False, verbose=False, task='default')
-        targetstatesDocking = self.cubic_interpolation([np.array([0.37, 0.23, 0.871]),
+        self.move_without_PD('RARM_JOINT5', [0.37, -0.23, 1.05], speed=1.0, orientation=[1,0,0], threshold=1e-1, maxIter=200, debug=False, verbose=False, task='default')
+        targetstatesDocking = self.cubic_interpolation([np.array([0.37, 0.23, 0.871]),  
                                                         np.array([0.37, 0.23, 1.05]),
-                                                        np.array([0.37, -0.05, 1.1]),
-                                                        np.array([0.21, -0.045, 1.1])],5)
-        
-        targetstatesLowering = self.cubic_interpolation([np.array([0.21, -0.045, 1.1]),
-                                                         np.array([0.21, -0.045, 1.0])],2)
-        
-        targetstatesPushing = self.cubic_interpolation([np.array([0.21, -0.045, 1.0]),
-                                                        np.array([0.65, -0.045, 1.0])],5)
+                                                        np.array([0.37, -0.04, 1.05]),
+                                                        np.array([0.21, -0.04, 1.05])],100)
+
+        targetstatesLowering = self.cubic_interpolation([np.array([0.21, -0.04, 1.05]),
+                                                         np.array([0.21, -0.04, 0.92])],100)
+
+        targetstatesPushing = self.cubic_interpolation([np.array([0.21, -0.04, 0.92]),
+                                                        np.array([0.58, -0.04, 0.92])],100)
 
                           
         targetstates = np.concatenate((targetstatesDocking, targetstatesLowering,targetstatesPushing))
         for s in targetstates:
             tp = np.array(s)
             taro = [1,0,0]
-            self.move_without_PD("LARM_JOINT5", targetPosition=tp, speed=1.0, orientation=taro, threshold=1e-3, maxIter=1000, debug=False, verbose=False,task = "default")
+            self.move_without_PD("LARM_JOINT5", targetPosition=tp, speed=0.001, orientation=taro, threshold=1e-3, maxIter=3, debug=False, verbose=False,task = "default")
             
         time.sleep(10)
 
