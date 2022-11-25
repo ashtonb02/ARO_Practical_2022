@@ -57,9 +57,9 @@ task2_savefig = True
 ### to here
 
 endEffector = "RARM_JOINT5"
-targetPosition = np.array([0.37, -0.23, 1.1])
+targetPosition = np.array([-0.37, -0.23, 1.1])
 
-pltTime, pltEFPosition = sim.move_with_PD(endEffector, targetPosition, speed=0.01, orientation=np.array([0,1,0]), threshold=1e-3, maxIter=1000, debug=True, verbose=False, task="default")
+pltTime, pltEFPosition = sim.move_with_PD(endEffector, targetPosition, speed=0.01, orientation=np.array([1,0,0]), threshold=1e-3, maxIter=1000, debug=True, verbose=False, task="default")
 #print(sim.getJointPosition(endEffector))
 #print()
 #print(sim.getJointOrientation(endEffector))

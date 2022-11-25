@@ -100,9 +100,10 @@ def getReadyForTask():
 
 
 def solution():
-    # TODO: Add your code here
+    # COMPLETE: Add your code here
     sim.clampWithoutPD(0, 0, angularSpeed=0.005, threshold=1e-1, maxIter=300, verbose=False)
-    pass
+    #sim.clampWithPD(0, 0, angularSpeed=0.005, threshold=1e-1, maxIter=500, verbose=False)
+    
 
 tableId, cubeId, targetId = getReadyForTask()
 solution()
